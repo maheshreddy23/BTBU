@@ -1,571 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BTBU</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BTBU – Be The Best You</title>
 
 <style>
 :root{
   --purple:#9b5cff;
   --pink:#ff4d8d;
+  --bg:#fdeff5;
+  --card:#ffffff;
+  --text:#333;
+  --muted:#888;
 }
-*{box-sizing:border-box;font-family:system-ui}
-body{margin:0;background:#fdeff5;padding-bottom:80px}
+
+*{box-sizing:border-box;font-family:system-ui,-apple-system}
+
+body{
+  margin:0;
+  background:linear-gradient(#fdeff5,#fff);
+  padding-bottom:80px;
+}
 
 /* HEADER */
 .header{
   background:linear-gradient(90deg,var(--purple),var(--pink));
-  color:#fff;padding:22px;
-  border-bottom-left-radius:28px;
-  border-bottom-right-radius:28px;
-  position:relative;z-index:1
+  color:#fff;
+  padding:22px;
+  border-bottom-left-radius:26px;
+  border-bottom-right-radius:26px;
+  position:relative;
 }
+
+.header h1{margin:0;font-size:28px}
+.header p{margin:4px 0 0;opacity:.9}
+
 .hamburger{
-  position:absolute;right:20px;top:22px;
-  font-size:26px;cursor:pointer;z-index:6
-}
-.header h1,
-.header p {
-  transition: all 0.35s ease;
-}
-
-.calendar-header h1 {
-  font-size: 28px;
-  font-weight: 700;
-}
-
-.calendar-header .calendar-title {
-  font-size: 14px;
-  opacity: 0.9;
+  position:absolute;
+  right:20px;
+  top:22px;
+  font-size:26px;
 }
 
 /* STATS */
 .stats{
-  position:relative;z-index:3;
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:12px;padding:16px;margin-top:-52px
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  padding:16px;
+  margin-top:-30px;
 }
+
 .stat{
-  background:#fff;border-radius:18px;
-  padding:18px 12px;text-align:center;
-  box-shadow:0 10px 28px rgba(0,0,0,.14);
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  text-align:center;
+  box-shadow:0 6px 20px rgba(0,0,0,.08);
 }
-.stat b{font-size:28px;display:block}
-.stat span{font-size:13px;color:#777;margin-top:6px;display:block}
-.stat.clickable{cursor: pointer;}
+
+.stat b{display:block;font-size:26px}
+.stat span{font-size:13px;color:#777}
 
 /* WEEK */
-.week{display:flex;gap:10px;padding:12px 16px;overflow-x:auto}
-.day{
-  min-width:76px;background:#fff;border-radius:18px;
-  padding:10px;text-align:center;cursor:pointer;
-  box-shadow:0 6px 16px rgba(0,0,0,.1)
+.week{
+  display:flex;
+  gap:10px;
+  padding:12px 16px;
+  overflow-x:auto;
 }
+
+.day{
+  min-width:70px;
+  background:#fff;
+  border-radius:14px;
+  padding:8px;
+  text-align:center;
+  box-shadow:0 4px 12px rgba(0,0,0,.08);
+  cursor:pointer;
+}
+
 .day.active{border:2px solid var(--purple)}
-.day small{color:#888;display:block;margin-top:2px}
-.bar{height:8px;background:#eee;border-radius:999px;margin-top:8px;overflow:hidden}
-.fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--purple),var(--pink))}
-.pct{font-size:11px;color:#666;margin-top:4px}
+
+.day small{display:block;color:#888}
+
+.bar{
+  height:6px;
+  background:#eee;
+  border-radius:10px;
+  margin-top:6px;
+  overflow:hidden;
+}
+
+.fill{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,var(--purple),var(--pink));
+}
 
 /* HABITS */
 .habits{padding:16px}
-.add-row{display:flex;gap:10px}
-.add-row input{flex:1;padding:14px;border-radius:16px;border:1px solid #ccc}
-.add-row button{padding:14px 20px;border:none;border-radius:16px;background:var(--purple);color:#fff}
-.habit{
-  background:#fff;border-radius:18px;
-  padding:14px;margin-top:12px;
-  display:flex;gap:12px;align-items:center;
-  box-shadow:0 6px 16px rgba(0,0,0,.1)
-}
-.check{
-  width:36px;height:36px;border-radius:50%;
-  background:#eee;display:flex;align-items:center;
-  justify-content:center;cursor:pointer
-}
-.habit.done .check{background:var(--purple);color:#fff}
-.habit.done span{text-decoration:line-through;color:#888}
 
-/* NAV */
-.nav{
-  position:fixed;bottom:0;left:0;right:0;
-  background:#fff;display:flex;justify-content:space-around;
-  padding:10px 0;box-shadow:0 -6px 18px rgba(0,0,0,.15);z-index:4
-}
-.nav div{text-align:center;font-size:12px;cursor:pointer}
-
-/* SCREENS */
-.screen{display:none}
-.screen.active{display:block}
-
-/* Calendar screen layout ONLY when active */
-.screen.active#calendar{
+.add-row{
   display:flex;
-  flex-direction:column;
-  height:100vh;
-  overflow:hidden;
-}
-
-/* OVERLAY */
-.menu-overlay{
-  position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,.35);
-  backdrop-filter:blur(2px);
-  display:none;z-index:5
-}
-
-/* MODERN MENU */
-.menu{
-  position:fixed;top:12px;right:-280px;
-  width:260px;height:auto;
-  background:#fff;
-  border-radius:22px;
-  padding:18px;
-  box-shadow:-10px 20px 40px rgba(0,0,0,.25);
-  transition:.35s cubic-bezier(.4,0,.2,1);
-  z-index:6
-}
-.menu.open{right:12px}
-.menu h3{margin:4px 0 12px 4px}
-
-.menu-item{
-  background:#f6f6f9;
-  border-radius:16px;
-  padding:14px;
-  margin-bottom:12px;
-  cursor:pointer;
-  transition:.15s;
-  display:flex;
-  align-items:center;
   gap:10px;
 }
-.menu-item:active{
-  transform:scale(.96);
-  background:#ececff;
-}
-.menu-item:hover{background:#f0efff}
 
-/* ICON */
-.icon{font-size:20px}
-#startModal{
-  z-index:7;
-}
-#startOverlay{
-  z-index:6;
-}
-#committedModal{ z-index:7; }
-#committedOverlay{ z-index:6; }
-.habit.locked{
-  opacity:.6;
-}
-.habit.locked .check{
-  cursor:not-allowed;
-}
-.toggle{
-  width:42px;
-  height:22px;
-  background:#ddd;
-  border-radius:999px;
-  position:relative;
-  transition:.25s;
-}
-.toggle::after{
-  content:"";
-  position:absolute;
-  top:3px;
-  left:3px;
-  width:16px;
-  height:16px;
-  background:#fff;
-  border-radius:50%;
-  box-shadow:0 2px 6px rgba(0,0,0,.25);
-  transition:.25s;
-}
-.toggle.on{
-  background:linear-gradient(90deg,var(--purple),var(--pink));
-}
-.toggle.on::after{
-  transform:translateX(20px);
-}
-.add-row button:disabled{
-  background:#bbb !important;
-  color:#eee !important;
-  cursor:not-allowed;
-}
-/* CALENDAR */
-#calendarContainer{
+.add-row input{
   flex:1;
-  padding:16px;
-  overflow-y:auto;
-  padding-bottom: 60px;
+  padding:14px;
+  border-radius:14px;
+  border:1px solid #ddd;
 }
 
-
-.year-block{
-  margin-bottom:24px;
+.add-row button{
+  background:var(--purple);
+  color:#fff;
+  border:none;
+  padding:0 20px;
+  border-radius:14px;
 }
 
-.year-title{
-  font-size:20px;
-  font-weight:700;
-  margin:12px 4px;
-  color:#333;
-}
-
-.month-card{
+.habit{
   background:#fff;
-  border-radius:20px;
-  padding:16px;
-  margin-bottom:20px;
-  box-shadow:0 8px 24px rgba(0,0,0,.12);
+  border-radius:16px;
+  padding:14px;
+  margin-top:12px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,.08);
 }
 
-.month-title{
-  font-weight:600;
-  margin-bottom:8px;
-  color:#555;
-}
-
-.days-grid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:6px;
-}
-
-.day-cell{
-  height:36px;
-  border-radius:10px;
+.check{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:#eee;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:13px;
-  background:#f2f2f2;
-  color:#555;
+  cursor:pointer;
 }
 
-.day-cell.done{
-  background:linear-gradient(90deg,var(--purple),var(--pink));
-  color:#fff;
-  font-weight:600;
-}
-.weekdays{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  margin:8px 0 6px;
-  font-size:12px;
-  color:#777;
-  text-align:center;
-}
-
-.days-grid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:6px;
-}
-
-.day-cell{
-  padding:8px 0;
-  border-radius:10px;
-  background:#f0f0f0;
-  text-align:center;
-  font-size:13px;
-}
-
-.day-cell.done{
-  background:linear-gradient(90deg,var(--purple),var(--pink));
+.habit.done .check{
+  background:var(--purple);
   color:#fff;
 }
 
-.day-cell.empty{
-  background:transparent;
+.habit.done span{
+  text-decoration:line-through;
+  color:#888;
 }
 
-#home{
-  overflow:hidden;
-}
-#calendar .header{
-  flex-shrink: 0;
-}
-body.calendar-open {
-  overflow: hidden;
+/* NAV */
+.nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#fff;
+  display:flex;
+  justify-content:space-around;
+  padding:10px 0;
+  box-shadow:0 -4px 12px rgba(0,0,0,.1);
 }
 
-
+.nav div{text-align:center;font-size:12px;color:#666}
 </style>
 </head>
 
 <body>
 
-<div class="menu-overlay" id="overlay" onclick="closeMenu()"></div>
-
-<div class="menu" id="menu">
-  <h3>Menu</h3>
-
-  <div class="menu-item" onclick="openTemplates()">
-    <span class="icon">📋</span> Default Habits
-  </div>
-
-  <div class="menu-item" onclick="resetAll()">
-    <span class="icon">🔄</span> Reset All
-  </div>
-  
-  <div class="menu-item" id="devToggle" onclick="toggleDevLock()">
-    <span class="icon">🧪</span>
-    <span style="flex:1">Lock Past Days</span>
-    <div class="toggle" id="lockToggle"></div>
-  </div>
-
-  <div class="menu-item" onclick="show('about')">
-    <span class="icon">ℹ</span> About BTBU
-  </div>
+<div class="header">
+  <h1>BTBU 💜</h1>
+  <p>Be The Best You</p>
+  <div class="hamburger">☰</div>
 </div>
 
-<div class="screen active" id="home">
-  <div class="header">
-    <h1>BTBU 💜</h1>
-    <p>Be The Best You</p>
-    <div class="hamburger" onclick="openMenu()">☰</div>
-  </div>
-
-  <div class="stats">
-    <div class="stat clickable" onclick="showStartDate()">
-  <b id="totalDays">0</b>
-  <span>Total Days</span>
+<div class="stats">
+  <div class="stat"><b id="totalDays">1</b><span>Total Days</span></div>
+  <div class="stat"><b id="committed">0</b><span>Committed Habits</span></div>
+  <div class="stat"><b id="currentStreak">0</b><span>Current Streak</span></div>
+  <div class="stat"><b id="bestStreak">0</b><span>Best Streak</span></div>
 </div>
 
-    <div class="stat clickable" onclick="showCommittedPopup()">
-	
-  <b id="committed">0</b>
-  <span>Committed Habits</span>
-</div>
-    <div class="stat"><b>0</b><span>Current Streak</span></div>
-    <div class="stat"><b>0</b><span>Best Streak</span></div>
+<div class="week" id="week"></div>
+
+<div class="habits">
+  <div class="add-row">
+    <input id="habitInput" placeholder="Add habit"/>
+    <button onclick="addHabit()">Add</button>
   </div>
-
-  <div class="week" id="week"></div>
-
-  <div class="habits">
-    <div class="add-row">
-      <input id="habitInput" placeholder="Add habit">
-      <button id="addBtn" class="add-btn" onclick="addHabit()">Add</button>
-    </div>
-    <div id="habitList"></div>
-  </div>
+  <div id="habitList"></div>
 </div>
-
-<div class="screen" id="calendar">
-  <div class="header calendar-header">
-    <h1 id="calendarYear">2026</h1>
-    <p class="calendar-title">BTBU 💜</p>
-  </div>
-  <div id="calendarContainer"></div>
-</div>
-
-
-<div class="screen" id="reports"><h2 style="padding:20px">Reports</h2></div>
-<div class="screen" id="profile"><h2 style="padding:20px">Profile</h2></div>
-<div class="screen" id="about"><h2 style="padding:20px">About BTBU<br><small>Be The Best You</small></h2></div>
-
 
 <div class="nav">
-  <div onclick="show('home')">🏠<br>Home</div>
-  <div onclick="show('calendar')">📅<br>Calendar</div>
-  <div onclick="show('reports')">📊<br>Reports</div>
-  <div onclick="show('profile')">👤<br>Profile</div>
+  <div>🏠<br>Home</div>
+  <div>📅<br>Calendar</div>
+  <div>📊<br>Reports</div>
+  <div>👤<br>Profile</div>
 </div>
 
 <script>
-const DEV_MODE = true; // set false for production
-function isPastDay(dateKey){
-  const d = new Date(dateKey);
-  const today = new Date();
-  d.setHours(0,0,0,0);
-  today.setHours(0,0,0,0);
-  return d < today;
-}
+let selectedDate = new Date().toDateString();
+let data = JSON.parse(localStorage.getItem("btbu_data") || "{}");
 
-function isPastLocked(dateKey){
-  if (!isPastDay(dateKey)) return false;
-
-  if (DEV_MODE) {
-    return JSON.parse(localStorage.getItem("btbu_lock_past") || "false");
-  }
-  return true; // PROD always locked
-}
-
-let selectedDate=new Date().toDateString();
-let data=JSON.parse(localStorage.getItem("btbu")||"{}");
-
-function ensureTodayInitialized(){
-  const todayKey = new Date().toDateString();
-
-  // If today already exists, do nothing
-  if(data[todayKey]) return;
-
-  // Find latest previous date with habits
-  const pastDates = Object.keys(data)
-    .map(d => new Date(d))
-    .filter(d => d < new Date())
-    .sort((a,b) => b - a);
-
-  if(pastDates.length === 0) return;
-
-  const lastDateKey = pastDates[0].toDateString();
-
-  // Clone habits forward (unchecked)
-  data[todayKey] = data[lastDateKey].map(h => ({
-    text: h.text,
-    done: false
-  }));
-
-  save();
-}
-
-function getFutureDates(fromDate){
-  const dates=[];
-  const today=new Date();
-  let d=new Date(fromDate);
-  d.setDate(d.getDate()+1);
-  while(d<=today){
-    dates.push(d.toDateString());
-    d.setDate(d.getDate()+1);
-  }
-  return dates;
-}
-
-function calculateTotalDays(){
-  // only dates with at least one habit
-  const validDates = Object.keys(data).filter(
-    d => data[d] && data[d].length > 0
-  );
-
-  if(validDates.length === 0) return 0;
-
-  const dates = validDates.map(d => new Date(d));
-  const firstDay = new Date(Math.min(...dates));
-  const today = new Date();
-
-  firstDay.setHours(0,0,0,0);
-  today.setHours(0,0,0,0);
-
-  return Math.floor((today - firstDay) / 86400000) + 1;
-}
-
-
-function isSuccessfulDay(dateKey){
-  return habits(dateKey).some(h=>h.done);
-}
-
-function calculateStreaks(){
-  let current = 0;
-  let best = parseInt(localStorage.getItem("btbu_best_streak") || "0");
-
-  let d = new Date();
-
-  while (true) {
-    const key = d.toDateString();
-    const h = getHabitsSafe(key);
-
-    // stop if day truly has no data (never created)
-    if (!h) break;
-
-    // ignore days with zero habits
-    if (h.length === 0) {
-      d.setDate(d.getDate() - 1);
-      continue;
-    }
-
-    // break only if habits exist but none done
-    if (!h.some(x => x.done)) break;
-
-    current++;
-    d.setDate(d.getDate() - 1);
-  }
-
-  if (current > best) {
-    best = current;
-    localStorage.setItem("btbu_best_streak", best);
-  }
-
-  return { current, best };
-}
-function calculateHabitStats() {
-  const stats = {};
-
-  Object.keys(data).forEach(date => {
-    data[date].forEach(h => {
-      if (!stats[h.text]) {
-        stats[h.text] = { total: 0 };
-      }
-      if (h.done) {
-        stats[h.text].total++;
-      }
-    });
-  });
-
-  return stats;
-}
-function getRankedCommittedHabits() {
-  const stats = calculateHabitStats();
-
-  return Object.entries(stats)
-    .map(([name, info]) => ({
-      name,
-      fires: info.total
-    }))
-    .sort((a, b) => b.fires - a.fires);
-}
-
-function habitStreak(habitText){
-  let streak = 0;
-  let d = new Date();
-
-  while(true){
-    const key = d.toDateString();
-    const dayHabits = data[key];
-    if(!dayHabits) break;
-
-    const h = dayHabits.find(x => x.text === habitText);
-    if(!h || !h.done) break;
-
-    streak++;
-    d.setDate(d.getDate() - 1);
-  }
-  return streak;
-}
-
-
-function habits(d){if(!data[d])data[d]=[];return data[d]}
-function getHabitsSafe(d){
-  return data[d] || null;
-}
-
-function save(){localStorage.setItem("btbu",JSON.stringify(data))}
-
-function openMenu(){
-  menu.classList.add("open");
-  overlay.style.display="block";
-}
-function closeMenu(){
-  menu.classList.remove("open");
-  overlay.style.display="none";
-}
-
-function openTemplates(){
-  closeMenu();
-  alert("Browse templates (next step)");
-}
-function resetAll(){
-  if(confirm("Reset all data?")){
-    localStorage.clear();location.reload();
-  }
-}
+function save(){ localStorage.setItem("btbu_data", JSON.stringify(data)); }
+function habits(date){ if(!data[date]) data[date]=[]; return data[date]; }
 
 function initWeek(){
-  week.innerHTML="";
+  const w=document.getElementById("week");
+  w.innerHTML="";
   for(let i=6;i>=0;i--){
-    const d=new Date();d.setDate(d.getDate()-i);
+    const d=new Date();
+    d.setDate(d.getDate()-i);
     const key=d.toDateString();
     const h=habits(key);
     const done=h.filter(x=>x.done).length;
@@ -573,338 +223,55 @@ function initWeek(){
 
     const div=document.createElement("div");
     div.className="day"+(key===selectedDate?" active":"");
-    div.onclick=()=>{selectedDate=key;render()};
+    div.onclick=()=>{selectedDate=key;render();};
 
     div.innerHTML=`
       <b>${d.getDate()}</b>
       <small>${d.toLocaleDateString('en',{weekday:'short'})}</small>
       <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
-      <div class="pct">${pct}%</div>
     `;
-    week.appendChild(div);
+    w.appendChild(div);
   }
 }
 
 function addHabit(){
-  if(!DEV_MODE) return;
-  if (isPastLocked(selectedDate)) return;
   const v=habitInput.value.trim();
   if(!v)return;
-
-  // add to selected day
   habits(selectedDate).push({text:v,done:false});
-
-  // carry forward to future days
-  getFutureDates(new Date(selectedDate)).forEach(d=>{
-    habits(d).push({text:v,done:false});
-  });
-
   habitInput.value="";
-  save();render();
+  save(); render();
 }
 
 function toggleHabit(i){
-  if (isPastLocked(selectedDate)) return;
-  habits(selectedDate)[i].done = !habits(selectedDate)[i].done;
+  const h=habits(selectedDate);
+  h[i].done=!h[i].done;
   save(); render();
 }
 
 function renderHabits(){
-  habitList.innerHTML="";
+  const list=document.getElementById("habitList");
+  list.innerHTML="";
   habits(selectedDate).forEach((h,i)=>{
     const div=document.createElement("div");
-    const locked = isPastLocked(selectedDate);
-    div.className = "habit" + (h.done ? " done" : "") + (locked ? " locked" : "");
+    div.className="habit"+(h.done?" done":"");
     div.innerHTML=`
-  <div class="check" onclick="toggleHabit(${i})">✓</div>
-  <span>${h.text}</span>
-  <span style="margin-left:auto;cursor:pointer;color:#999"
-        onclick="deleteHabit('${h.text}')">✕</span>
-`;
-
-    habitList.appendChild(div);
-  });
-  committed.innerText=[...new Set(Object.values(data).flat().map(h=>h.text))].length;
-}
-function renderCommittedHabits(){
-  const list = document.getElementById("committedList");
-  list.innerHTML = "";
-
-  const ranked = getRankedCommittedHabits(); // 🔥 CORRECT LOGIC
-
-  ranked.forEach((h, i) => {
-    const div = document.createElement("div");
-    div.className = "habit";
-    div.innerHTML = `
-      <b>${i + 1}.</b>
-      <span style="margin-left:10px">${h.name}</span>
-      <span style="margin-left:auto">
-        🔥 ${h.fires} day${h.fires !== 1 ? "s" : ""}
-      </span>
+      <div class="check" onclick="toggleHabit(${i})">✓</div>
+      <span>${h.text}</span>
     `;
     list.appendChild(div);
   });
-}
-function renderCalendar(){
-  const container = document.getElementById("calendarContainer");
-  container.innerHTML = "";
 
-  const dates = Object.keys(data).map(d => new Date(d));
-  if(dates.length === 0) return;
-
-  const start = new Date(Math.min(...dates));
-  const today = new Date();
-  const end = new Date(today.getFullYear(), today.getMonth() + 1, 0); // last day of current month
-
-
-  const startYear = start.getFullYear();
-  const endYear = end.getFullYear();
-
-  for(let y = startYear; y <= endYear; y++){
-    for(let m = 0; m < 12; m++){
-      const monthDate = new Date(y, m, 1);
-
-      const monthCard = document.createElement("div");
-      monthCard.className = "month-card";
-      monthCard.dataset.year = y;
-
-      monthCard.innerHTML = `
-        <div class="month-title">
-          ${monthDate.toLocaleString('default',{month:'long'})}
-        </div>
-        <div class="weekdays">
-          <span>Sun</span><span>Mon</span><span>Tue</span>
-          <span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-        </div>
-        <div class="days-grid"></div>
-      `;
-
-      const grid = monthCard.querySelector(".days-grid");
-
-      const firstDay = new Date(y, m, 1).getDay();
-      const daysInMonth = new Date(y, m + 1, 0).getDate();
-
-      // empty cells before first day
-      for(let i = 0; i < firstDay; i++){
-        grid.appendChild(document.createElement("div"));
-      }
-
-      for(let d = 1; d <= daysInMonth; d++){
-        const dateObj = new Date(y, m, d);
-        const key = dateObj.toDateString();
-
-        const cell = document.createElement("div");
-        cell.className = "day-cell";
-        cell.innerText = d;
-
-        if(data[key] && data[key].some(h => h.done)){
-          cell.classList.add("done");
-        }
-
-        grid.appendChild(cell);
-      }
-
-      container.appendChild(monthCard);
-    }
-  }
-}
-
-function syncCalendarYear(){
-  const container = document.getElementById("calendarContainer");
-  const yearLabel = document.getElementById("calendarYear");
-
-  container.onscroll = () => {
-    const months = container.querySelectorAll(".month-card");
-    for(const m of months){
-      const rect = m.getBoundingClientRect();
-      if(rect.top >= 120){
-        yearLabel.innerText = m.dataset.year;
-        break;
-      }
-    }
-  };
-}
-
-function show(id){
-  closeMenu();
-
-  document.querySelectorAll(".screen").forEach(s =>
-    s.classList.remove("active")
-  );
-
-  document.body.classList.toggle("calendar-open", id === "calendar");
-
-  const screen = document.getElementById(id);
-  screen.classList.add("active");
-
-  if(id === "calendar"){
-    renderCalendar();
-    syncCalendarYear();
-  }
-
-  if(id === "home"){
-    render();
-  }
-}
-
-
-function getStartDate(){
-  const validDates = Object.keys(data).filter(
-    d => data[d] && data[d].length > 0
-  );
-
-  if(validDates.length === 0) return null;
-
-  const dates = validDates.map(d => new Date(d));
-  return new Date(Math.min(...dates));
+  const all=[...new Set(Object.values(data).flat().map(h=>h.text))];
+  document.getElementById("committed").innerText=all.length;
 }
 
 function render(){
-  ensureTodayInitialized();
   initWeek();
   renderHabits();
-
-  const s = calculateStreaks();
-  totalDays.innerText = calculateTotalDays();
-
-
-  // update UI safely
-  document.querySelectorAll(".stat b")[2].innerText = s.current;
-  document.querySelectorAll(".stat b")[3].innerText = s.best;
-  updateAddButton();
 }
-function showStartDate(){
-  const start = getStartDate();
-
-  if(!start){
-    return; // nothing to show
-  }
-
-  calMonth.innerText = start.toLocaleDateString('en-US', { month:'long' });
-  calDay.innerText = start.getDate();
-  calYear.innerText = start.getFullYear();
-
-  startOverlay.style.display = "block";
-  startModal.style.pointerEvents = "auto";
-  startModal.style.opacity = "1";
-  startModal.style.transform = "translate(-50%,-50%) scale(1)";
-}
-function closeStartModal(){
-  startOverlay.style.display = "none";
-  startModal.style.pointerEvents = "none";
-  startModal.style.opacity = "0";
-  startModal.style.transform = "translate(-50%,-50%) scale(.9)";
-}
-function showCommittedPopup(){
-  renderCommittedHabits();
-
-  committedOverlay.style.display = "block";
-  committedModal.style.pointerEvents = "auto";
-  committedModal.style.opacity = "1";
-  committedModal.style.transform = "translate(-50%,-50%) scale(1)";
-}
-
-function closeCommittedPopup(){
-  committedOverlay.style.display = "none";
-  committedModal.style.pointerEvents = "none";
-  committedModal.style.opacity = "0";
-  committedModal.style.transform = "translate(-50%,-50%) scale(.9)";
-}
-function toggleDevLock(){
-  const current = JSON.parse(localStorage.getItem("btbu_lock_past") || "false");
-  const next = !current;
-  localStorage.setItem("btbu_lock_past", next.toString());
-  updateDevToggle();
-  closeMenu();
-  render();
-}
-function updateDevToggle(){
-  const locked = JSON.parse(localStorage.getItem("btbu_lock_past") || "false");
-  const t = document.getElementById("lockToggle");
-  if(!t) return;
-  t.classList.toggle("on", locked);
-}
-
-
-
-if(!DEV_MODE){
-  const el = document.getElementById("devToggle");
-  if(el) el.style.display="none";
-}
-
-function updateAddButton(){
-  const btn = document.getElementById("addBtn");
-  if(!btn) return;
-
-  const locked = !DEV_MODE || isPastLocked(selectedDate);
-
-  btn.disabled = locked;
-}
-
-
-
-updateDevToggle();
-
 
 render();
-function deleteHabit(text){
-  if (isPastLocked(selectedDate)) return;
-  if(!confirm("Remove habit from today and future days?"))return;
-
-  // today
-  data[selectedDate]=habits(selectedDate).filter(h=>h.text!==text);
-
-  // future days
-  getFutureDates(new Date(selectedDate)).forEach(d=>{
-    data[d]=habits(d).filter(h=>h.text!==text);
-  });
-
-  save();render();
-}
-
 </script>
-
-<!-- START DATE MODAL -->
-<div class="menu-overlay" id="startOverlay" onclick="closeStartModal()"></div>
-<div class="menu" id="startModal" style="
-  right:auto;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%) scale(.9);
-  opacity:0;
-  pointer-events:none;
-  text-align:center;
-">
-  <h3>Habit Journey Started</h3>
-
-  <div id="calendarCard" style="
-    margin:12px auto 4px;
-    width:140px;
-    border-radius:16px;
-    background:#f6f6f9;
-    box-shadow:0 6px 18px rgba(0,0,0,.15);
-    padding:12px;
-  ">
-    <div id="calMonth" style="font-size:14px;color:#777"></div>
-    <div id="calDay" style="font-size:42px;font-weight:700;color:#000"></div>
-    <div id="calYear" style="font-size:13px;color:#888"></div>
-  </div>
-</div>
-
-<!-- COMMITTED HABITS MODAL -->
-<div class="menu-overlay" id="committedOverlay" onclick="closeCommittedPopup()"></div>
-
-<div class="menu" id="committedModal" style="
-  right:auto;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%) scale(.9);
-  opacity:0;
-  pointer-events:none;
-">
-  <h3>Committed Habits</h3>
-  <div id="committedList" style="max-height:320px;overflow:auto"></div>
-</div>
 
 </body>
 </html>
