@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTBU</title>
+
+<style>
+:root{
+  --purple:#9b5cff;
+  --pink:#ff4d8d;
+}
+*{box-sizing:border-box;font-family:system-ui}
+body{margin:0;background:#fdeff5;padding-bottom:80px}
+
+/* HEADER */
+.header{
+  background:linear-gradient(90deg,var(--purple),var(--pink));
+  color:#fff;padding:22px;
+  border-bottom-left-radius:26px;
+  border-bottom-right-radius:26px;
+  position:relative;
+  z-index:1;
+}
+.hamburger{
+  position:absolute;right:20px;top:22px;
+  font-size:26px;cursor:pointer;z-index:5;
+}
+
+/* STATS */
+.stats{
+  position:relative;z-index:3;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:12px;padding:16px;margin-top:-48px
+}
+.stat{
+  background:#fff;border-radius:16px;
+  padding:18px 12px;text-align:center;
+  box-shadow:0 8px 24px rgba(0,0,0,.12)
+}
+.stat b{font-size:28px;display:block}
+.stat span{font-size:13px;color:#777;margin-top:6px;display:block}
+
+/* WEEK */
+.week{display:flex;gap:10px;padding:12px 16px;overflow-x:auto}
+.day{
+  min-width:74px;background:#fff;border-radius:16px;
+  padding:10px;text-align:center;cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,.08)
+}
+.day.active{border:2px solid var(--purple)}
+.day small{color:#888;display:block;margin-top:2px}
+.bar{height:8px;background:#eee;border-radius:999px;margin-top:8px;overflow:hidden}
+.fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--purple),var(--pink))}
+.pct{font-size:11px;color:#666;margin-top:4px}
+
+/* HABITS */
+.habits{padding:16px}
+.add-row{display:flex;gap:10px}
+.add-row input{flex:1;padding:14px;border-radius:14px;border:1px solid #ccc}
+.add-row button{padding:14px 20px;border:none;border-radius:14px;background:var(--purple);color:#fff}
+.habit{
+  background:#fff;border-radius:16px;
+  padding:14px;margin-top:12px;
+  display:flex;gap:12px;align-items:center;
+  box-shadow:0 4px 12px rgba(0,0,0,.08)
+}
+.check{
+  width:34px;height:34px;border-radius:50%;
+  background:#eee;display:flex;align-items:center;
+  justify-content:center;cursor:pointer
+}
+.habit.done .check{background:var(--purple);color:#fff}
+.habit.done span{text-decoration:line-through;color:#888}
+
+/* NAV */
+.nav{
+  position:fixed;bottom:0;left:0;right:0;
+  background:#fff;display:flex;justify-content:space-around;
+  padding:10px 0;box-shadow:0 -4px 12px rgba(0,0,0,.1);z-index:4
+}
+.nav div{text-align:center;font-size:12px;cursor:pointer}
+
+/* SCREENS */
+.screen{display:none}
+.screen.active{display:block}
+
+/* HAMBURGER MENU */
+.menu-overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.3);display:none;z-index:5
+}
+.menu{
+  position:fixed;top:0;right:-260px;width:260px;height:100%;
+  background:#fff;padding:20px;
+  box-shadow:-4px 0 12px rgba(0,0,0,.2);
+  transition:.3s;z-index:6
+}
+.menu.open{right:0}
+.menu h3{margin-top:0}
+.menu div{margin:16px 0;cursor:pointer}
+</style>
+</head>
+
+<body>
+
+<!-- OVERLAY -->
+<div class="menu-overlay" id="overlay" onclick="closeMenu()"></div>
+
+<!-- MENU -->
+<div class="menu" id="menu">
+  <h3>Menu</h3>
+  <div onclick="openTemplates()">📋 Default Habits</div>
+  <div onclick="resetAll()">🔄 Reset All</div>
+  <div onclick="show('about')">ℹ About BTBU</div>
+</div>
+
+<!-- HOME -->
+<div class="screen active" id="home">
+  <div class="header">
+    <h1>BTBU 💜</h1>
+    <p>Be The Best You</p>
+    <div class="hamburger" onclick="openMenu()">☰</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b>1</b><span>Total Days</span></div>
+    <div class="stat"><b id="committed">0</b><span>Committed Habits</span></div>
+    <div class="stat"><b>0</b><span>Current Streak</span></div>
+    <div class="stat"><b>0</b><span>Best Streak</span></div>
+  </div>
+
+  <div class="week" id="week"></div>
+
+  <div class="habits">
+    <div class="add-row">
+      <input id="habitInput" placeholder="Add habit">
+      <button onclick="addHabit()">Add</button>
+    </div>
+    <div id="habitList"></div>
+  </div>
+</div>
+
+<!-- OTHER SCREENS -->
+<div class="screen" id="calendar"><h2 style="padding:20px">Calendar</h2></div>
+<div class="screen" id="reports"><h2 style="padding:20px">Reports</h2></div>
+<div class="screen" id="profile"><h2 style="padding:20px">Profile</h2></div>
+<div class="screen" id="about"><h2 style="padding:20px">About BTBU<br><small>Be The Best You – habit building app</small></h2></div>
+
+<!-- NAV -->
+<div class="nav">
+  <div onclick="show('home')">🏠<br>Home</div>
+  <div onclick="show('calendar')">📅<br>Calendar</div>
+  <div onclick="show('reports')">📊<br>Reports</div>
+  <div onclick="show('profile')">👤<br>Profile</div>
+</div>
+
+<script>
+let selectedDate=new Date().toDateString();
+let data=JSON.parse(localStorage.getItem("btbu")||"{}");
+
+function habits(d){if(!data[d])data[d]=[];return data[d]}
+function save(){localStorage.setItem("btbu",JSON.stringify(data))}
+
+function openMenu(){
+  menu.classList.add("open");
+  overlay.style.display="block";
+}
+function closeMenu(){
+  menu.classList.remove("open");
+  overlay.style.display="none";
+}
+
+function openTemplates(){
+  closeMenu();
+  alert("Browse templates screen (next step)");
+}
+
+function resetAll(){
+  if(confirm("Reset all habits and data?")){
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+function initWeek(){
+  week.innerHTML="";
+  for(let i=6;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const key=d.toDateString();
+    const h=habits(key);
+    const done=h.filter(x=>x.done).length;
+    const pct=h.length?Math.round(done/h.length*100):0;
+
+    const div=document.createElement("div");
+    div.className="day"+(key===selectedDate?" active":"");
+    div.onclick=()=>{selectedDate=key;render()};
+
+    div.innerHTML=`
+      <b>${d.getDate()}</b>
+      <small>${d.toLocaleDateString('en',{weekday:'short'})}</small>
+      <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
+      <div class="pct">${pct}%</div>
+    `;
+    week.appendChild(div);
+  }
+}
+
+function addHabit(){
+  const v=habitInput.value.trim();
+  if(!v)return;
+  habits(selectedDate).push({text:v,done:false});
+  habitInput.value="";
+  save();render();
+}
+
+function toggleHabit(i){
+  habits(selectedDate)[i].done=!habits(selectedDate)[i].done;
+  save();render();
+}
+
+function renderHabits(){
+  habitList.innerHTML="";
+  habits(selectedDate).forEach((h,i)=>{
+    const div=document.createElement("div");
+    div.className="habit"+(h.done?" done":"");
+    div.innerHTML=`<div class="check" onclick="toggleHabit(${i})">✓</div><span>${h.text}</span>`;
+    habitList.appendChild(div);
+  });
+  committed.innerText=[...new Set(Object.values(data).flat().map(h=>h.text))].length;
+}
+
+function show(id){
+  closeMenu();
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function render(){initWeek();renderHabits()}
+render();
+</script>
+
+</body>
+</html>
