@@ -266,6 +266,9 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
   background:transparent;
 }
 
+#home{
+  overflow:hidden;
+}
 
 
 </style>
@@ -697,20 +700,23 @@ function syncCalendarYear(){
     }
   });
 }
-renderCalendar();
-syncCalendarYear();
-
 function show(id){
   closeMenu();
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
 
-  if(id === "committedScreen"){
-    renderCommittedHabits();
-  }
+  document.querySelectorAll(".screen").forEach(s =>
+    s.classList.remove("active")
+  );
+
+  const screen = document.getElementById(id);
+  screen.classList.add("active");
 
   if(id === "calendar"){
     renderCalendar();
+    syncCalendarYear();
+  }
+
+  if(id === "home"){
+    render();
   }
 }
 
