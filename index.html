@@ -25,6 +25,20 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
   position:absolute;right:20px;top:22px;
   font-size:26px;cursor:pointer;z-index:6
 }
+.header h1,
+.header p {
+  transition: all 0.35s ease;
+}
+
+.calendar-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.calendar-header .calendar-title {
+  font-size: 14px;
+  opacity: 0.9;
+}
 
 /* STATS */
 .stats{
@@ -184,6 +198,7 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
   flex:1;
   padding:16px;
   overflow-y:auto;
+  padding-bottom: 60px;
 }
 
 
@@ -269,6 +284,12 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
 #home{
   overflow:hidden;
 }
+#calendar .header{
+  flex-shrink: 0;
+}
+body.calendar-open {
+  overflow: hidden;
+}
 
 
 </style>
@@ -334,12 +355,13 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
 </div>
 
 <div class="screen" id="calendar">
-	  <div class="header">
-		<h1>BTBU 💜</h1>
-		<p id="calendarYear">2026</p>
-	  </div>
-	  <div id="calendarContainer"></div>
+  <div class="header calendar-header">
+    <h1 id="calendarYear">2026</h1>
+    <p class="calendar-title">BTBU 💜</p>
+  </div>
+  <div id="calendarContainer"></div>
 </div>
+
 
 <div class="screen" id="reports"><h2 style="padding:20px">Reports</h2></div>
 <div class="screen" id="profile"><h2 style="padding:20px">Profile</h2></div>
@@ -631,7 +653,9 @@ function renderCalendar(){
   if(dates.length === 0) return;
 
   const start = new Date(Math.min(...dates));
-  const end = new Date();
+  const today = new Date();
+  const end = new Date(today.getFullYear(), today.getMonth() + 1, 0); // last day of current month
+
 
   const startYear = start.getFullYear();
   const endYear = end.getFullYear();
@@ -689,7 +713,7 @@ function syncCalendarYear(){
   const container = document.getElementById("calendarContainer");
   const yearLabel = document.getElementById("calendarYear");
 
-  container.addEventListener("scroll", () => {
+  container.onscroll = () => {
     const months = container.querySelectorAll(".month-card");
     for(const m of months){
       const rect = m.getBoundingClientRect();
@@ -698,14 +722,17 @@ function syncCalendarYear(){
         break;
       }
     }
-  });
+  };
 }
+
 function show(id){
   closeMenu();
 
   document.querySelectorAll(".screen").forEach(s =>
     s.classList.remove("active")
   );
+
+  document.body.classList.toggle("calendar-open", id === "calendar");
 
   const screen = document.getElementById(id);
   screen.classList.add("active");
