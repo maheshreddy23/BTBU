@@ -157,7 +157,10 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
 
   <div class="stats">
     <div class="stat"><b>1</b><span>Total Days</span></div>
-    <div class="stat"><b id="committed">0</b><span>Committed Habits</span></div>
+    <div class="stat" onclick="show('committedScreen')">
+  <b id="committed">0</b>
+  <span>Committed Habits</span>
+</div>
     <div class="stat"><b>0</b><span>Current Streak</span></div>
     <div class="stat"><b>0</b><span>Best Streak</span></div>
   </div>
@@ -177,6 +180,10 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
 <div class="screen" id="reports"><h2 style="padding:20px">Reports</h2></div>
 <div class="screen" id="profile"><h2 style="padding:20px">Profile</h2></div>
 <div class="screen" id="about"><h2 style="padding:20px">About BTBU<br><small>Be The Best You</small></h2></div>
+<div class="screen" id="committedScreen">
+  <h2 style="padding:20px">Committed Habits</h2>
+  <div id="committedList" style="padding:16px"></div>
+</div>
 
 <div class="nav">
   <div onclick="show('home')">🏠<br>Home</div>
@@ -239,6 +246,23 @@ function calculateStreaks(){
   return { current, best };
 }
 
+function habitStreak(habitText){
+  let streak = 0;
+  let d = new Date();
+
+  while(true){
+    const key = d.toDateString();
+    const dayHabits = data[key];
+    if(!dayHabits) break;
+
+    const h = dayHabits.find(x => x.text === habitText);
+    if(!h || !h.done) break;
+
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
 
 
 function habits(d){if(!data[d])data[d]=[];return data[d]}
@@ -326,11 +350,40 @@ function renderHabits(){
   });
   committed.innerText=[...new Set(Object.values(data).flat().map(h=>h.text))].length;
 }
+function renderCommittedHabits(){
+  const list = document.getElementById("committedList");
+  list.innerHTML = "";
+
+  const uniqueHabits = [...new Set(
+    Object.values(data).flat().map(h => h.text)
+  )];
+
+  const ranked = uniqueHabits
+    .map(h => ({ text: h, streak: habitStreak(h) }))
+    .sort((a,b) => b.streak - a.streak);
+
+  ranked.forEach((h,i)=>{
+    const div = document.createElement("div");
+    div.className = "habit";
+    div.innerHTML = `
+      <b>${i+1}.</b>
+      <span style="margin-left:10px">${h.text}</span>
+      <span style="margin-left:auto">🔥 ${h.streak} day${h.streak!==1?"s":""}</span>
+    `;
+    list.appendChild(div);
+  });
+}
+
 function show(id){
   closeMenu();
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
+
+  if(id === "committedScreen"){
+    renderCommittedHabits();
+  }
 }
+
 function render(){
   initWeek();
   renderHabits();
