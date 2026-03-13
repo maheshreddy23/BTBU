@@ -35,10 +35,11 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
 .stat{
   background:#fff;border-radius:18px;
   padding:18px 12px;text-align:center;
-  box-shadow:0 10px 28px rgba(0,0,0,.14)
+  box-shadow:0 10px 28px rgba(0,0,0,.14);
 }
 .stat b{font-size:28px;display:block}
 .stat span{font-size:13px;color:#777;margin-top:6px;display:block}
+.stat.clickable{cursor: pointer;}
 
 /* WEEK */
 .week{display:flex;gap:10px;padding:12px 16px;overflow-x:auto}
@@ -125,6 +126,15 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
 
 /* ICON */
 .icon{font-size:20px}
+#startModal{
+  z-index:7;
+}
+#startOverlay{
+  z-index:6;
+}
+#committedModal{ z-index:7; }
+#committedOverlay{ z-index:6; }
+
 </style>
 </head>
 
@@ -156,8 +166,13 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
   </div>
 
   <div class="stats">
-    <div class="stat"><b id="totalDays">0</b><span>Total Days</span></div>
-    <div class="stat" onclick="show('committedScreen')">
+    <div class="stat clickable" onclick="showStartDate()">
+  <b id="totalDays">0</b>
+  <span>Total Days</span>
+</div>
+
+    <div class="stat clickable" onclick="showCommittedPopup()">
+	
   <b id="committed">0</b>
   <span>Committed Habits</span>
 </div>
@@ -180,10 +195,7 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
 <div class="screen" id="reports"><h2 style="padding:20px">Reports</h2></div>
 <div class="screen" id="profile"><h2 style="padding:20px">Profile</h2></div>
 <div class="screen" id="about"><h2 style="padding:20px">About BTBU<br><small>Be The Best You</small></h2></div>
-<div class="screen" id="committedScreen">
-  <h2 style="padding:20px">Committed Habits</h2>
-  <div id="committedList" style="padding:16px"></div>
-</div>
+
 
 <div class="nav">
   <div onclick="show('home')">🏠<br>Home</div>
@@ -263,6 +275,32 @@ function calculateStreaks(){
   }
 
   return { current, best };
+}
+function calculateHabitStats() {
+  const stats = {};
+
+  Object.keys(data).forEach(date => {
+    data[date].forEach(h => {
+      if (!stats[h.text]) {
+        stats[h.text] = { total: 0 };
+      }
+      if (h.done) {
+        stats[h.text].total++;
+      }
+    });
+  });
+
+  return stats;
+}
+function getRankedCommittedHabits() {
+  const stats = calculateHabitStats();
+
+  return Object.entries(stats)
+    .map(([name, info]) => ({
+      name,
+      fires: info.total
+    }))
+    .sort((a, b) => b.fires - a.fires);
 }
 
 function habitStreak(habitText){
@@ -373,25 +411,22 @@ function renderCommittedHabits(){
   const list = document.getElementById("committedList");
   list.innerHTML = "";
 
-  const uniqueHabits = [...new Set(
-    Object.values(data).flat().map(h => h.text)
-  )];
+  const ranked = getRankedCommittedHabits(); // 🔥 CORRECT LOGIC
 
-  const ranked = uniqueHabits
-    .map(h => ({ text: h, streak: habitStreak(h) }))
-    .sort((a,b) => b.streak - a.streak);
-
-  ranked.forEach((h,i)=>{
+  ranked.forEach((h, i) => {
     const div = document.createElement("div");
     div.className = "habit";
     div.innerHTML = `
-      <b>${i+1}.</b>
-      <span style="margin-left:10px">${h.text}</span>
-      <span style="margin-left:auto">🔥 ${h.streak} day${h.streak!==1?"s":""}</span>
+      <b>${i + 1}.</b>
+      <span style="margin-left:10px">${h.name}</span>
+      <span style="margin-left:auto">
+        🔥 ${h.fires} day${h.fires !== 1 ? "s" : ""}
+      </span>
     `;
     list.appendChild(div);
   });
 }
+
 
 function show(id){
   closeMenu();
@@ -401,6 +436,17 @@ function show(id){
   if(id === "committedScreen"){
     renderCommittedHabits();
   }
+}
+
+function getStartDate(){
+  const validDates = Object.keys(data).filter(
+    d => data[d] && data[d].length > 0
+  );
+
+  if(validDates.length === 0) return null;
+
+  const dates = validDates.map(d => new Date(d));
+  return new Date(Math.min(...dates));
 }
 
 function render(){
@@ -415,6 +461,45 @@ function render(){
   document.querySelectorAll(".stat b")[2].innerText = s.current;
   document.querySelectorAll(".stat b")[3].innerText = s.best;
 }
+function showStartDate(){
+  const start = getStartDate();
+
+  if(!start){
+    return; // nothing to show
+  }
+
+  calMonth.innerText = start.toLocaleDateString('en-US', { month:'long' });
+  calDay.innerText = start.getDate();
+  calYear.innerText = start.getFullYear();
+
+  startOverlay.style.display = "block";
+  startModal.style.pointerEvents = "auto";
+  startModal.style.opacity = "1";
+  startModal.style.transform = "translate(-50%,-50%) scale(1)";
+}
+function closeStartModal(){
+  startOverlay.style.display = "none";
+  startModal.style.pointerEvents = "none";
+  startModal.style.opacity = "0";
+  startModal.style.transform = "translate(-50%,-50%) scale(.9)";
+}
+function showCommittedPopup(){
+  renderCommittedHabits();
+
+  committedOverlay.style.display = "block";
+  committedModal.style.pointerEvents = "auto";
+  committedModal.style.opacity = "1";
+  committedModal.style.transform = "translate(-50%,-50%) scale(1)";
+}
+
+function closeCommittedPopup(){
+  committedOverlay.style.display = "none";
+  committedModal.style.pointerEvents = "none";
+  committedModal.style.opacity = "0";
+  committedModal.style.transform = "translate(-50%,-50%) scale(.9)";
+}
+
+
 
 render();
 function deleteHabit(text){
@@ -432,6 +517,48 @@ function deleteHabit(text){
 }
 
 </script>
+
+<!-- START DATE MODAL -->
+<div class="menu-overlay" id="startOverlay" onclick="closeStartModal()"></div>
+<div class="menu" id="startModal" style="
+  right:auto;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%) scale(.9);
+  opacity:0;
+  pointer-events:none;
+  text-align:center;
+">
+  <h3>Habit Journey Started</h3>
+
+  <div id="calendarCard" style="
+    margin:12px auto 4px;
+    width:140px;
+    border-radius:16px;
+    background:#f6f6f9;
+    box-shadow:0 6px 18px rgba(0,0,0,.15);
+    padding:12px;
+  ">
+    <div id="calMonth" style="font-size:14px;color:#777"></div>
+    <div id="calDay" style="font-size:42px;font-weight:700;color:#000"></div>
+    <div id="calYear" style="font-size:13px;color:#888"></div>
+  </div>
+</div>
+
+<!-- COMMITTED HABITS MODAL -->
+<div class="menu-overlay" id="committedOverlay" onclick="closeCommittedPopup()"></div>
+
+<div class="menu" id="committedModal" style="
+  right:auto;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%) scale(.9);
+  opacity:0;
+  pointer-events:none;
+">
+  <h3>Committed Habits</h3>
+  <div id="committedList" style="max-height:320px;overflow:auto"></div>
+</div>
 
 </body>
 </html>
