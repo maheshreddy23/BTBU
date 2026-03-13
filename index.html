@@ -189,6 +189,18 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
 let selectedDate=new Date().toDateString();
 let data=JSON.parse(localStorage.getItem("btbu")||"{}");
 
+function getFutureDates(fromDate){
+  const dates=[];
+  const today=new Date();
+  let d=new Date(fromDate);
+  d.setDate(d.getDate()+1);
+  while(d<=today){
+    dates.push(d.toDateString());
+    d.setDate(d.getDate()+1);
+  }
+  return dates;
+}
+
 function habits(d){if(!data[d])data[d]=[];return data[d]}
 function save(){localStorage.setItem("btbu",JSON.stringify(data))}
 
@@ -237,10 +249,19 @@ function initWeek(){
 function addHabit(){
   const v=habitInput.value.trim();
   if(!v)return;
+
+  // add to selected day
   habits(selectedDate).push({text:v,done:false});
+
+  // carry forward to future days
+  getFutureDates(new Date(selectedDate)).forEach(d=>{
+    habits(d).push({text:v,done:false});
+  });
+
   habitInput.value="";
   save();render();
 }
+
 function toggleHabit(i){
   habits(selectedDate)[i].done=!habits(selectedDate)[i].done;
   save();render();
@@ -250,7 +271,13 @@ function renderHabits(){
   habits(selectedDate).forEach((h,i)=>{
     const div=document.createElement("div");
     div.className="habit"+(h.done?" done":"");
-    div.innerHTML=`<div class="check" onclick="toggleHabit(${i})">✓</div><span>${h.text}</span>`;
+    div.innerHTML=`
+  <div class="check" onclick="toggleHabit(${i})">✓</div>
+  <span>${h.text}</span>
+  <span style="margin-left:auto;cursor:pointer;color:#999"
+        onclick="deleteHabit('${h.text}')">✕</span>
+`;
+
     habitList.appendChild(div);
   });
   committed.innerText=[...new Set(Object.values(data).flat().map(h=>h.text))].length;
@@ -262,6 +289,20 @@ function show(id){
 }
 function render(){initWeek();renderHabits()}
 render();
+function deleteHabit(text){
+  if(!confirm("Remove habit from today and future days?"))return;
+
+  // today
+  data[selectedDate]=habits(selectedDate).filter(h=>h.text!==text);
+
+  // future days
+  getFutureDates(new Date(selectedDate)).forEach(d=>{
+    data[d]=habits(d).filter(h=>h.text!==text);
+  });
+
+  save();render();
+}
+
 </script>
 
 </body>
