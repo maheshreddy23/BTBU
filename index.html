@@ -201,7 +201,51 @@ function getFutureDates(fromDate){
   return dates;
 }
 
+function isSuccessfulDay(dateKey){
+  return habits(dateKey).some(h=>h.done);
+}
+
+function calculateStreaks(){
+  let current = 0;
+  let best = parseInt(localStorage.getItem("btbu_best_streak") || "0");
+
+  let d = new Date();
+
+  while (true) {
+    const key = d.toDateString();
+    const h = getHabitsSafe(key);
+
+    // stop if day truly has no data (never created)
+    if (!h) break;
+
+    // ignore days with zero habits
+    if (h.length === 0) {
+      d.setDate(d.getDate() - 1);
+      continue;
+    }
+
+    // break only if habits exist but none done
+    if (!h.some(x => x.done)) break;
+
+    current++;
+    d.setDate(d.getDate() - 1);
+  }
+
+  if (current > best) {
+    best = current;
+    localStorage.setItem("btbu_best_streak", best);
+  }
+
+  return { current, best };
+}
+
+
+
 function habits(d){if(!data[d])data[d]=[];return data[d]}
+function getHabitsSafe(d){
+  return data[d] || null;
+}
+
 function save(){localStorage.setItem("btbu",JSON.stringify(data))}
 
 function openMenu(){
@@ -287,7 +331,17 @@ function show(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
-function render(){initWeek();renderHabits()}
+function render(){
+  initWeek();
+  renderHabits();
+
+  const s = calculateStreaks();
+
+  // update UI safely
+  document.querySelectorAll(".stat b")[2].innerText = s.current;
+  document.querySelectorAll(".stat b")[3].innerText = s.best;
+}
+
 render();
 function deleteHabit(text){
   if(!confirm("Remove habit from today and future days?"))return;
