@@ -134,6 +134,44 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
 }
 #committedModal{ z-index:7; }
 #committedOverlay{ z-index:6; }
+.habit.locked{
+  opacity:.6;
+}
+.habit.locked .check{
+  cursor:not-allowed;
+}
+.toggle{
+  width:42px;
+  height:22px;
+  background:#ddd;
+  border-radius:999px;
+  position:relative;
+  transition:.25s;
+}
+.toggle::after{
+  content:"";
+  position:absolute;
+  top:3px;
+  left:3px;
+  width:16px;
+  height:16px;
+  background:#fff;
+  border-radius:50%;
+  box-shadow:0 2px 6px rgba(0,0,0,.25);
+  transition:.25s;
+}
+.toggle.on{
+  background:linear-gradient(90deg,var(--purple),var(--pink));
+}
+.toggle.on::after{
+  transform:translateX(20px);
+}
+.add-row button:disabled{
+  background:#bbb !important;
+  color:#eee !important;
+  cursor:not-allowed;
+}
+
 
 </style>
 </head>
@@ -151,6 +189,12 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
 
   <div class="menu-item" onclick="resetAll()">
     <span class="icon">🔄</span> Reset All
+  </div>
+  
+  <div class="menu-item" id="devToggle" onclick="toggleDevLock()">
+    <span class="icon">🧪</span>
+    <span style="flex:1">Lock Past Days</span>
+    <div class="toggle" id="lockToggle"></div>
   </div>
 
   <div class="menu-item" onclick="show('about')">
@@ -185,7 +229,7 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
   <div class="habits">
     <div class="add-row">
       <input id="habitInput" placeholder="Add habit">
-      <button onclick="addHabit()">Add</button>
+      <button id="addBtn" class="add-btn" onclick="addHabit()">Add</button>
     </div>
     <div id="habitList"></div>
   </div>
@@ -205,8 +249,51 @@ body{margin:0;background:#fdeff5;padding-bottom:80px}
 </div>
 
 <script>
+const DEV_MODE = true; // set false for production
+function isPastDay(dateKey){
+  const d = new Date(dateKey);
+  const today = new Date();
+  d.setHours(0,0,0,0);
+  today.setHours(0,0,0,0);
+  return d < today;
+}
+
+function isPastLocked(dateKey){
+  if (!isPastDay(dateKey)) return false;
+
+  if (DEV_MODE) {
+    return JSON.parse(localStorage.getItem("btbu_lock_past") || "false");
+  }
+  return true; // PROD always locked
+}
+
 let selectedDate=new Date().toDateString();
 let data=JSON.parse(localStorage.getItem("btbu")||"{}");
+
+function ensureTodayInitialized(){
+  const todayKey = new Date().toDateString();
+
+  // If today already exists, do nothing
+  if(data[todayKey]) return;
+
+  // Find latest previous date with habits
+  const pastDates = Object.keys(data)
+    .map(d => new Date(d))
+    .filter(d => d < new Date())
+    .sort((a,b) => b - a);
+
+  if(pastDates.length === 0) return;
+
+  const lastDateKey = pastDates[0].toDateString();
+
+  // Clone habits forward (unchecked)
+  data[todayKey] = data[lastDateKey].map(h => ({
+    text: h.text,
+    done: false
+  }));
+
+  save();
+}
 
 function getFutureDates(fromDate){
   const dates=[];
@@ -372,6 +459,8 @@ function initWeek(){
 }
 
 function addHabit(){
+  if(!DEV_MODE) return;
+  if (isPastLocked(selectedDate)) return;
   const v=habitInput.value.trim();
   if(!v)return;
 
@@ -388,14 +477,17 @@ function addHabit(){
 }
 
 function toggleHabit(i){
-  habits(selectedDate)[i].done=!habits(selectedDate)[i].done;
-  save();render();
+  if (isPastLocked(selectedDate)) return;
+  habits(selectedDate)[i].done = !habits(selectedDate)[i].done;
+  save(); render();
 }
+
 function renderHabits(){
   habitList.innerHTML="";
   habits(selectedDate).forEach((h,i)=>{
     const div=document.createElement("div");
-    div.className="habit"+(h.done?" done":"");
+    const locked = isPastLocked(selectedDate);
+    div.className = "habit" + (h.done ? " done" : "") + (locked ? " locked" : "");
     div.innerHTML=`
   <div class="check" onclick="toggleHabit(${i})">✓</div>
   <span>${h.text}</span>
@@ -450,6 +542,7 @@ function getStartDate(){
 }
 
 function render(){
+  ensureTodayInitialized();
   initWeek();
   renderHabits();
 
@@ -460,6 +553,7 @@ function render(){
   // update UI safely
   document.querySelectorAll(".stat b")[2].innerText = s.current;
   document.querySelectorAll(".stat b")[3].innerText = s.best;
+  updateAddButton();
 }
 function showStartDate(){
   const start = getStartDate();
@@ -498,11 +592,44 @@ function closeCommittedPopup(){
   committedModal.style.opacity = "0";
   committedModal.style.transform = "translate(-50%,-50%) scale(.9)";
 }
+function toggleDevLock(){
+  const current = JSON.parse(localStorage.getItem("btbu_lock_past") || "false");
+  const next = !current;
+  localStorage.setItem("btbu_lock_past", next.toString());
+  updateDevToggle();
+  closeMenu();
+  render();
+}
+function updateDevToggle(){
+  const locked = JSON.parse(localStorage.getItem("btbu_lock_past") || "false");
+  const t = document.getElementById("lockToggle");
+  if(!t) return;
+  t.classList.toggle("on", locked);
+}
 
 
+
+if(!DEV_MODE){
+  const el = document.getElementById("devToggle");
+  if(el) el.style.display="none";
+}
+
+function updateAddButton(){
+  const btn = document.getElementById("addBtn");
+  if(!btn) return;
+
+  const locked = !DEV_MODE || isPastLocked(selectedDate);
+
+  btn.disabled = locked;
+}
+
+
+
+updateDevToggle();
 
 render();
 function deleteHabit(text){
+  if (isPastLocked(selectedDate)) return;
   if(!confirm("Remove habit from today and future days?"))return;
 
   // today
