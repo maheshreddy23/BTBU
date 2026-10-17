@@ -1,277 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="genz" data-mode="dark">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>BTBU – Be The Best You</title>
-
-<style>
-:root{
-  --purple:#9b5cff;
-  --pink:#ff4d8d;
-  --bg:#fdeff5;
-  --card:#ffffff;
-  --text:#333;
-  --muted:#888;
-}
-
-*{box-sizing:border-box;font-family:system-ui,-apple-system}
-
-body{
-  margin:0;
-  background:linear-gradient(#fdeff5,#fff);
-  padding-bottom:80px;
-}
-
-/* HEADER */
-.header{
-  background:linear-gradient(90deg,var(--purple),var(--pink));
-  color:#fff;
-  padding:22px;
-  border-bottom-left-radius:26px;
-  border-bottom-right-radius:26px;
-  position:relative;
-}
-
-.header h1{margin:0;font-size:28px}
-.header p{margin:4px 0 0;opacity:.9}
-
-.hamburger{
-  position:absolute;
-  right:20px;
-  top:22px;
-  font-size:26px;
-}
-
-/* STATS */
-.stats{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-  padding:16px;
-  margin-top:-30px;
-}
-
-.stat{
-  background:#fff;
-  border-radius:16px;
-  padding:16px;
-  text-align:center;
-  box-shadow:0 6px 20px rgba(0,0,0,.08);
-}
-
-.stat b{display:block;font-size:26px}
-.stat span{font-size:13px;color:#777}
-
-/* WEEK */
-.week{
-  display:flex;
-  gap:10px;
-  padding:12px 16px;
-  overflow-x:auto;
-}
-
-.day{
-  min-width:70px;
-  background:#fff;
-  border-radius:14px;
-  padding:8px;
-  text-align:center;
-  box-shadow:0 4px 12px rgba(0,0,0,.08);
-  cursor:pointer;
-}
-
-.day.active{border:2px solid var(--purple)}
-
-.day small{display:block;color:#888}
-
-.bar{
-  height:6px;
-  background:#eee;
-  border-radius:10px;
-  margin-top:6px;
-  overflow:hidden;
-}
-
-.fill{
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg,var(--purple),var(--pink));
-}
-
-/* HABITS */
-.habits{padding:16px}
-
-.add-row{
-  display:flex;
-  gap:10px;
-}
-
-.add-row input{
-  flex:1;
-  padding:14px;
-  border-radius:14px;
-  border:1px solid #ddd;
-}
-
-.add-row button{
-  background:var(--purple);
-  color:#fff;
-  border:none;
-  padding:0 20px;
-  border-radius:14px;
-}
-
-.habit{
-  background:#fff;
-  border-radius:16px;
-  padding:14px;
-  margin-top:12px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  box-shadow:0 4px 12px rgba(0,0,0,.08);
-}
-
-.check{
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  background:#eee;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-}
-
-.habit.done .check{
-  background:var(--purple);
-  color:#fff;
-}
-
-.habit.done span{
-  text-decoration:line-through;
-  color:#888;
-}
-
-/* NAV */
-.nav{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:#fff;
-  display:flex;
-  justify-content:space-around;
-  padding:10px 0;
-  box-shadow:0 -4px 12px rgba(0,0,0,.1);
-}
-
-.nav div{text-align:center;font-size:12px;color:#666}
-</style>
-</head>
-
-<body>
-
-<div class="header">
-  <h1>BTBU 💜</h1>
-  <p>Be The Best You</p>
-  <div class="hamburger">☰</div>
-</div>
-
-<div class="stats">
-  <div class="stat"><b id="totalDays">1</b><span>Total Days</span></div>
-  <div class="stat"><b id="committed">0</b><span>Committed Habits</span></div>
-  <div class="stat"><b id="currentStreak">0</b><span>Current Streak</span></div>
-  <div class="stat"><b id="bestStreak">0</b><span>Best Streak</span></div>
-</div>
-
-<div class="week" id="week"></div>
-
-<div class="habits">
-  <div class="add-row">
-    <input id="habitInput" placeholder="Add habit"/>
-    <button onclick="addHabit()">Add</button>
-  </div>
-  <div id="habitList"></div>
-</div>
-
-<div class="nav">
-  <div>🏠<br>Home</div>
-  <div>📅<br>Calendar</div>
-  <div>📊<br>Reports</div>
-  <div>👤<br>Profile</div>
-</div>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0c0a12">
+<meta name="description" content="BTBU — Be The Best You. A habit tracker built on Nigrah, the quiet strength of self-control.">
+<title>BTBU — Be The Best You</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=26">
 <script>
-let selectedDate = new Date().toDateString();
-let data = JSON.parse(localStorage.getItem("btbu_data") || "{}");
-
-function save(){ localStorage.setItem("btbu_data", JSON.stringify(data)); }
-function habits(date){ if(!data[date]) data[date]=[]; return data[date]; }
-
-function initWeek(){
-  const w=document.getElementById("week");
-  w.innerHTML="";
-  for(let i=6;i>=0;i--){
-    const d=new Date();
-    d.setDate(d.getDate()-i);
-    const key=d.toDateString();
-    const h=habits(key);
-    const done=h.filter(x=>x.done).length;
-    const pct=h.length?Math.round(done/h.length*100):0;
-
-    const div=document.createElement("div");
-    div.className="day"+(key===selectedDate?" active":"");
-    div.onclick=()=>{selectedDate=key;render();};
-
-    div.innerHTML=`
-      <b>${d.getDate()}</b>
-      <small>${d.toLocaleDateString('en',{weekday:'short'})}</small>
-      <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
-    `;
-    w.appendChild(div);
-  }
-}
-
-function addHabit(){
-  const v=habitInput.value.trim();
-  if(!v)return;
-  habits(selectedDate).push({text:v,done:false});
-  habitInput.value="";
-  save(); render();
-}
-
-function toggleHabit(i){
-  const h=habits(selectedDate);
-  h[i].done=!h[i].done;
-  save(); render();
-}
-
-function renderHabits(){
-  const list=document.getElementById("habitList");
-  list.innerHTML="";
-  habits(selectedDate).forEach((h,i)=>{
-    const div=document.createElement("div");
-    div.className="habit"+(h.done?" done":"");
-    div.innerHTML=`
-      <div class="check" onclick="toggleHabit(${i})">✓</div>
-      <span>${h.text}</span>
-    `;
-    list.appendChild(div);
-  });
-
-  const all=[...new Set(Object.values(data).flat().map(h=>h.text))];
-  document.getElementById("committed").innerText=all.length;
-}
-
-function render(){
-  initWeek();
-  renderHabits();
-}
-
-render();
+  // Apply saved theme before first paint so there's no flash.
+  (function(){try{var m=localStorage.getItem("btbu_theme")||"auto";if(m==="auto")m=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";
+    document.documentElement.dataset.theme=localStorage.getItem("btbu_look")||"genz";document.documentElement.dataset.mode=m;}catch(e){}})();
 </script>
-
+</head>
+<body>
+<div id="app">
+  <div class="glow a"></div><div class="glow b"></div>
+  <div id="screen" class="scroll"></div>
+  <div id="toast"></div>
+  <nav id="nav"></nav>
+  <div id="scrim" class="hidden"></div>
+  <div id="sheet"></div>
+  <div id="onboard" class="hidden"></div>
+  <div id="gate" class="hidden"></div>
+</div>
+<script src="config.js?v=26" onerror="this.remove()"></script>
+<script src="sync.js?v=26"></script>
+<script src="app.js?v=26"></script>
 </body>
 </html>

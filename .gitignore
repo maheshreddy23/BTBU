@@ -1,0 +1,17 @@
+# OS
+Thumbs.db
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Local scratch / experiments
+*.local.html
+scratch/
+
+# Per-deploy Supabase config — never check in real keys.
+# Copy config.js.template to config.js and fill in the values.
+config.js
