@@ -601,7 +601,7 @@ function renderGate() {
   if (gated) g.innerHTML = `<div class="kicker" style="letter-spacing:.2em">BTBU</div>
     <h1 class="h1" style="font-size:36px;margin-top:18px">Be the best you.</h1>
     <div class="nigrah"><b>निग्रह · Nigrah</b> — the quiet strength of self-control.<br>Sign in to start. Your habits are end-to-end encrypted and synced across your devices.</div>
-    <button class="btn ghost row" data-act="signin" ${s.state === S.CONNECTING ? "disabled" : ""} style="justify-content:center;gap:10px;font-size:15px">${GOOGLE_G}<span>${s.state === S.CONNECTING ? "Opening Google…" : "Continue with Google"}</span></button>
+    <button class="btn ghost" data-act="signin" ${s.state === S.CONNECTING ? "disabled" : ""} style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px">${GOOGLE_G}<span>${s.state === S.CONNECTING ? "Opening Google…" : "Continue with Google"}</span></button>
     ${s.state === S.ERROR && s.error ? `<div class="note" style="color:var(--warn);margin-top:12px">${esc(s.error)}</div>` : ""}
     <div class="note" style="margin-top:18px;text-align:center">No password to remember. We never see your habits in plaintext.</div>`;
   return gated;
