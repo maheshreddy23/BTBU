@@ -1,6 +1,6 @@
 // BTBU v27 service worker — app shell cache-first, everything else network.
-const CACHE = "btbu-v27";
-const SHELL = ["./", "index.html", "styles.css?v=27", "sync.js?v=27", "community.js?v=27", "app.js?v=27", "manifest.json", "icon-180.png", "icon-192.png", "icon-512.png"];
+const CACHE = "btbu-v27.1";
+const SHELL = ["./", "index.html", "styles.css?v=27.1", "sync.js?v=27.1", "community.js?v=27.1", "app.js?v=27.1", "manifest.json", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

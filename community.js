@@ -204,7 +204,10 @@
       if (!S.me) { S.loading = false; render(); return; }
       await loadSocial();
       await Promise.all([loadFeed(), loadStories(), loadChallenges(), loadCircles()]);
-    } catch (e) { err(e); }
+    } catch (e) {
+      if (!S.meLoaded) { S.meLoaded = true; S.loadErr = (e && e.message) || "Couldn't reach the server"; }
+      else err(e);
+    }
     S.loading = false; redraw();
   }
 
@@ -221,6 +224,12 @@
     if (!window.BTBU_SYNC || !BTBU_SYNC.client) return `<div class="page">${head}${gateCard("Community needs an account", "This copy of BTBU runs on this device only. Community switches on when the app is connected to Supabase.")}</div>`;
     if (!online()) return `<div class="page">${head}${gateCard("Sign in to join", "Posts, challenges and circles need you signed in.")}</div>`;
     if (!S.meLoaded) { refresh(true); return `<div class="page">${head}<div class="note" style="text-align:center;padding:40px">Loading…</div></div>`; }
+    if (S.loadErr && !S.me) {
+      const setup = /schema cache|does not exist|relation/i.test(S.loadErr);
+      return `<div class="page">${head}${gateCard(setup ? "Community isn't switched on yet" : "Couldn't load Community",
+        setup ? "The server is missing the community tables. Whoever runs this BTBU needs to run supabase/migrations/v27_community.sql in Supabase." : esc(S.loadErr),
+        `<button class="btn" data-act="c:retry" style="margin-top:16px">Try again</button>`)}</div>`;
+    }
     if (!S.me) return `<div class="page">${head}${gateCard("Set up your community profile", "Pick a handle and who can see your posts. Your habits stay encrypted either way.", `<button class="btn" data-act="c:join" style="margin-top:16px">Get started</button>`)}</div>`;
     const tabs = `<div class="seg">${[["feed", "Feed"], ["challenges", "Challenges"]].map(([k, l]) => `<button class="${S.tab === k ? "on" : ""}" data-act="c:tab" data-v="${k}">${l}</button>`).join("")}</div>`;
     return `<div class="page" style="padding-left:0;padding-right:0"><div style="padding:0 20px">${head}</div>
@@ -650,6 +659,7 @@
     const id = d.id;
     try {
       switch (a) {
+        case "c:retry": S.loadErr = null; S.meLoaded = false; render(); break;
         case "c:tab": S.tab = d.v; render(); break;
         case "c:cat": S.cat = d.v; render(); break;
         case "c:goch": ui.screen = "community"; S.tab = "challenges"; render(); break;
@@ -894,7 +904,7 @@
   window.BTBU_COMMUNITY = {
     view, sheet, act, renderLayer, publishDay, profileHeader, profileGrid, profileChallenges,
     onEnter() { refresh(false); deepLink(); },
-    onAuth() { S.meLoaded = false; S.me = null; S.counts = null; if (online()) { loadMe().then(() => { render(); deepLink(); if (S.me) refresh(true); }).catch(err); } },
+    onAuth() { S.meLoaded = false; S.me = null; S.counts = null; S.loadErr = null; if (online()) { loadMe().then(() => { render(); deepLink(); if (S.me) refresh(true); }).catch(e => { S.meLoaded = true; S.loadErr = (e && e.message) || "Couldn't reach the server"; render(); }); } },
     me: () => S.me, online, closeLayer: () => setLayer(null), hasLayer: () => !!S.layer,
     async setAvatar(blob) {
       if (!online() || !S.me || !blob) return;
