@@ -1,6 +1,7 @@
 // ============================================================================
-// BTBU v26 — Be The Best You
-// Vanilla JS PWA. Screens: Home (dashboard) · Today (check-off) · Days · Stats · You.
+// BTBU v27 — Be The Best You
+// Vanilla JS PWA. Tabs: Home (dashboard) · Today (checklist + calendar) · Community · You (posts, stats, challenges).
+// Community lives in community.js and talks to Supabase directly; habits stay on the encrypted sync path.
 // Data lives in localStorage on this device; v1 (btbu_data) and v25 (btbu_v2_*)
 // data are migrated on first run and the originals are left untouched.
 // ============================================================================
@@ -67,6 +68,7 @@ function save() {
   const best = bestStreak(), prev = parseInt(localStorage.getItem("btbu_best_streak") || "0", 10) || 0;
   if (best > prev) localStorage.setItem("btbu_best_streak", String(best));
   scheduleSync();
+  if (COMM() && db.habits) { const a = activeOn(todayKey()); COMM().publishDay(a.length > 0 && doneOn(todayKey()).length >= a.length); }
 }
 // Push local edits shortly after they happen instead of waiting for the 60 s poll.
 let syncT;
@@ -132,7 +134,9 @@ function habitRun(h) {
 }
 
 // ---------- ui state ----------
-const ui = { screen: "home", sheet: null, dayKey: null, tplSel: [], hit: null, draft: "", ob: 0, obSel: [], scrollDays: false };
+const ui = { screen: "home", sheet: null, dayKey: null, tplSel: [], hit: null, draft: "", ob: 0, obSel: [], scrollDays: false, todayView: "list", pTab: "posts" };
+const COMM = () => window.BTBU_COMMUNITY || null;
+const todaySeg = () => `<div class="seg">${[["list", "Checklist"], ["cal", "Calendar"]].map(([k, l]) => `<button class="${ui.todayView === k ? "on" : ""}" data-act="todayView" data-v="${k}">${l}</button>`).join("")}</div>`;
 const $ = id => document.getElementById(id);
 let toastT;
 function toast(m) { const t = $("toast"); t.textContent = m; t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 2200); }
@@ -220,6 +224,7 @@ function todayView() {
   return `<div class="page">
     <div class="between"><div><h1 class="h1">${new Date().toLocaleDateString("en", { weekday: "long" })}</h1><div class="sub">${new Date().toLocaleDateString("en", { month: "long", day: "numeric" })}</div></div>
       <button class="iconbtn" data-act="sheet" data-s="settings" aria-label="Settings">≡</button></div>
+    ${todaySeg()}
     <div class="card row" style="gap:20px;padding:22px;border-radius:26px">
       <div class="ring"><svg width="96" height="96" viewBox="0 0 96 96"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9b7cff"/><stop offset="1" stop-color="#ff7ba0"/></linearGradient></defs>
         <circle cx="48" cy="48" r="40" fill="none" stroke="var(--chip)" stroke-width="9"/>
@@ -257,10 +262,10 @@ function daysView() {
   }
   void from;
   return `<div class="days"><div class="head between"><div><h1 class="h1" id="calYear">${now.getFullYear()}</h1><div class="sub" id="calMonth" style="text-transform:uppercase;letter-spacing:.12em;font-size:12px;font-weight:700">${now.toLocaleString("en", { month: "long" })}</div></div>
-    <button class="pill" data-act="jumpToday">Today</button></div><div class="list scroll" id="calList">${html}</div></div>`;
+    <button class="pill" data-act="jumpToday">Jump to today</button></div><div style="flex:none;padding:0 20px 10px">${todaySeg()}</div><div class="list scroll" id="calList">${html}</div></div>`;
 }
 
-function statsView() {
+function statsView(embedded) {
   const pts = lastKeys(30).map(k => ({ k, r: rate(k) }));
   const W = 320, H = 120, P = 8, st = (W - 2 * P) / 29, x = i => P + i * st, yv = r => H - P - (r || 0) * (H - 2 * P);
   const line = pts.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + "," + yv(p.r).toFixed(1)).join(" ");
@@ -280,8 +285,8 @@ function statsView() {
       <div style="flex:1;min-width:0;font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.text)}</div><div class="note" style="font-weight:800">${d ? Math.round(n / d * 100) : 0}%</div></div><div class="heat">${cells}</div></div>` }; })
     .sort((a, b) => b.p - a.p).map(x => x.html).join("");
 
-  return `<div class="page">
-    <div><h1 class="h1">Stats</h1><div class="sub">${sk ? "Since " + fmt(sk, { month: "long", day: "numeric", year: "numeric" }) : "Nothing tracked yet"}</div></div>
+  return `<div class="${embedded ? "" : "page"}" style="${embedded ? "display:flex;flex-direction:column;gap:14px" : ""}">
+    <div>${embedded ? "" : '<h1 class="h1">Stats</h1>'}<div class="sub">Private to you · ${sk ? "since " + fmt(sk, { month: "long", day: "numeric", year: "numeric" }) : "nothing tracked yet"}</div></div>
     <div class="card"><div class="kicker">Last 30 days</div><div class="lead">Averaging ${avg}% a day</div>
       <svg viewBox="0 0 320 120" preserveAspectRatio="none" style="width:100%;height:auto;display:block;overflow:visible">
         <defs><linearGradient id="sl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9b7cff"/><stop offset="1" stop-color="#ff7ba0"/></linearGradient>
@@ -295,25 +300,38 @@ function statsView() {
 }
 
 function youView() {
-  const p = db.prefs, sk = startKey(), s = syncStatus(), ready = syncIs("READY");
-  const name = p.name || s.fullName || "", photo = p.photo || s.avatarUrl || "";
-  const initial = esc((name.trim()[0] || "?").toUpperCase());
-  const synced = ready ? (s.lastSyncAt ? "Encrypted · synced " + new Date(s.lastSyncAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "Encrypted · syncing…")
+  const p = db.prefs, sk = startKey(), st = syncStatus(), ready = syncIs("READY"), C = COMM(), cp = C && C.me();
+  const name = p.name || st.fullName || "", photo = p.photo || st.avatarUrl || "";
+  const initial = esc((name.trim()[0] || "?").toUpperCase()), s = streak(), tab = ui.pTab;
+  const synced = ready ? (st.lastSyncAt ? "Encrypted · synced " + new Date(st.lastSyncAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "Encrypted · syncing…")
     : syncIs("ERROR") ? "Sync error — retrying" : "On this device only";
-  return `<div class="page" style="align-items:stretch;text-align:center;padding-top:32px">
-    <label class="avatar" aria-label="Change photo">${photo ? `<img src="${esc(photo)}" alt="">` : initial}<input type="file" accept="image/*" id="photoIn" class="hidden"></label>
-    <div style="margin-top:8px"><input class="edit h1" id="nameIn" value="${esc(name)}" placeholder="Your name" maxlength="40" style="font-size:28px">
-      <div class="row" style="justify-content:center;gap:0;color:var(--muted);font-weight:600"><span style="opacity:.6">@</span><input class="edit" id="handleIn" value="${esc(p.handle || "")}" placeholder="handle" maxlength="24" size="${Math.max(6, (p.handle || "").length + 1)}" style="width:auto;field-sizing:content;min-width:6ch;text-align:left;padding-left:2px;font-weight:600;color:var(--text);font-size:15px"></div></div>
-    <div class="card" style="padding:4px 16px;text-align:left;margin-top:14px">
-      ${s.email ? `<div class="kv"><span class="kicker">Account</span><span>${esc(s.email)}</span></div>` : ""}
+  const ph = C ? C.profileHeader() : { counts: "" };
+  let body = "";
+  if (tab === "posts") body = C ? C.profileGrid() : "";
+  else if (tab === "challenges") body = C ? C.profileChallenges() : "";
+  else body = `<div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px">${statsView(true)}
+    <div class="card" style="padding:4px 16px">
+      ${st.email ? `<div class="kv"><span class="kicker">Account</span><span>${esc(st.email)}</span></div>` : ""}
       <div class="kv"><span class="kicker">Tracking since</span><span>${sk ? fmt(sk, { month: "short", day: "numeric", year: "numeric" }) : "—"}</span></div>
       <div class="kv"><span class="kicker">Personal best</span><span>${bestStreak()} day streak</span></div>
-      <div class="kv"><span class="kicker">Your data</span><span>${synced}</span></div>
-    </div>
-    <button class="btn grad" data-act="sheet" data-s="share">Share your streak card</button>
+      <div class="kv"><span class="kicker">Your data</span><span>${synced}</span></div></div>
     <button class="btn ghost" data-act="export">Export my data</button>
-    ${ready ? `<button class="btn ghost" data-act="signout" style="color:var(--muted)">Sign out</button>` : ""}
-  </div>`;
+    ${ready ? `<button class="btn ghost" data-act="signout" style="color:var(--muted)">Sign out</button>` : ""}</div>`;
+  return `<div class="page" style="padding-bottom:0;gap:16px">
+    <div class="between" style="align-items:center">
+      <div class="row" style="gap:8px;min-width:0"><span style="opacity:.5;font-weight:700;font-size:20px">@</span><input class="edit" id="handleIn" value="${esc(p.handle || "")}" placeholder="handle" maxlength="20" style="width:auto;field-sizing:content;min-width:6ch;text-align:left;font-size:22px;font-weight:800;color:var(--strong);padding:2px 4px">
+        ${cp ? `<button class="c-tag soft" data-act="c:privacy">${cp.is_private ? "🔒 Private" : "Public"}</button>` : ""}</div>
+      <div class="row" style="gap:8px">${cp ? `<button class="iconbtn" data-act="c:create" style="font-size:22px" aria-label="Create">+</button>` : ""}<button class="iconbtn" data-act="sheet" data-s="settings" aria-label="Settings">≡</button></div></div>
+    <div class="row" style="gap:16px">
+      <label class="c-ring big" aria-label="Change photo" style="cursor:pointer"><span class="c-av" style="width:82px;height:82px;font-size:30px;background:var(--grad);border:3px solid var(--bg)">${photo ? `<img src="${esc(photo)}" alt="">` : initial}</span><input type="file" accept="image/*" id="photoIn" class="hidden"></label>
+      ${ph.counts}</div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <input class="edit" id="nameIn" value="${esc(name)}" placeholder="Your name" maxlength="40" style="text-align:left;font-size:17px;font-weight:800;color:var(--strong);padding:2px 4px">
+      ${cp ? `<input class="edit" id="c_bio" value="${esc(cp.bio || "")}" placeholder="Add a bio" maxlength="160" style="text-align:left;font-size:14px;padding:2px 4px">` : ""}
+      <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><span class="c-tag soft">🔥 ${s}-day streak</span><span class="c-tag soft">Best ${bestStreak()}</span></div></div>
+    <div class="row" style="gap:8px"><button class="btn ghost" data-act="sheet" data-s="share" style="padding:11px">Share streak card</button>${cp ? "" : (C && C.online() ? `<button class="btn" data-act="c:join" style="padding:11px">Join community</button>` : "")}</div>
+    <div class="c-ptabs">${[["posts", "Posts"], ["stats", "Stats"], ["challenges", "Challenges"]].map(([k, l]) => `<button class="${tab === k ? "on" : ""}" data-act="ptab" data-v="${k}">${l}</button>`).join("")}</div>
+  </div>${body}<div style="height:130px"></div>`;
 }
 
 // ---------- sheets ----------
@@ -330,10 +348,12 @@ function settingsSheet() {
       <div class="note">${pushOk ? (p.pushOn ? "On" : "Off") : "Switches on once reminders are set up"}</div></div>
       <input type="time" id="remIn" value="${p.reminder || "20:00"}" style="background:var(--chip);border:0;border-radius:12px;padding:9px 10px;font-weight:700;color:var(--strong)"></div>
       ${pushOk ? `<button class="btn" data-act="push" style="margin-top:12px">${p.pushOn ? "Turn off reminders" : "Turn on reminders"}</button>` : ""}</div>
+    ${COMM() && COMM().me() ? `<button class="menu" data-act="c:privacy"><span class="i">${COMM().me().is_private ? "🔒" : "🌐"}</span><span style="flex:1"><b style="display:block">Profile visibility</b><span class="note">${COMM().me().is_private ? "Private · you approve followers" : "Public · anyone can follow"} — tap to switch</span></span>›</button>
+    <div class="note" style="margin:-4px 4px 0">Keyword filter is on for posts, comments, messages and check-ins. Block or mute people from any post's ⋯ menu.</div>` : ""}
     <button class="menu" data-act="sheet" data-s="library"><span class="i">+</span><span style="flex:1"><b style="display:block">Habit library</b><span class="note">25 ready-made habits</span></span>›</button>
     <button class="menu" data-act="export"><span class="i">↓</span><span style="flex:1"><b style="display:block">Export my data</b><span class="note">Your habits, as a JSON file</span></span>›</button>
     <button class="menu" data-act="reset"><span class="i">↺</span><span style="flex:1"><b style="display:block">Reset everything</b><span class="note">Deletes all habits on this device</span></span>›</button>
-    <div class="nigrah" style="margin:4px 4px 0"><b>निग्रह · Nigrah</b> — the quiet strength of self-control. BTBU is a small daily practice of it: choose, show up, repeat. <span style="opacity:.7">v26</span></div>
+    <div class="nigrah" style="margin:4px 4px 0"><b>निग्रह · Nigrah</b> — the quiet strength of self-control. BTBU is a small daily practice of it: choose, show up, repeat. <span style="opacity:.7">v27</span></div>
   </div>`;
 }
 
@@ -360,14 +380,20 @@ function daySheet() {
 
 // ---------- render ----------
 function render() {
-  const views = { home: homeView, today: todayView, days: daysView, stats: statsView, you: youView };
-  $("screen").innerHTML = views[ui.screen]();
-  $("screen").style.overflowY = ui.screen === "days" ? "hidden" : "auto";
-  $("nav").innerHTML = [["home", "Home"], ["today", "Today"], ["days", "Days"], ["stats", "Stats"], ["you", "You"]]
+  if (ui.screen === "days") { ui.screen = "today"; ui.todayView = "cal"; }
+  if (ui.screen === "stats") { ui.screen = "you"; ui.pTab = "stats"; }
+  const cal = ui.screen === "today" && ui.todayView === "cal";
+  const views = { home: homeView, today: cal ? daysView : todayView, community: () => COMM() ? COMM().view() : "", you: youView };
+  const sc = $("screen"), keep = sc.dataset.s === ui.screen + (cal ? ":cal" : ""), top = sc.scrollTop;
+  sc.innerHTML = views[ui.screen]();
+  sc.dataset.s = ui.screen + (cal ? ":cal" : "");
+  sc.style.overflowY = cal ? "hidden" : "auto";
+  if (keep) sc.scrollTop = top;
+  $("nav").innerHTML = [["home", "Home"], ["today", "Today"], ["community", "Community"], ["you", "You"]]
     .map(([id, l]) => `<button class="${ui.screen === id ? "on" : ""}" data-act="go" data-s="${id}">${l}</button>`).join("");
   renderSheet();
-  if (ui.screen === "days" && ui.scrollDays) { ui.scrollDays = false; requestAnimationFrame(jumpToday); }
-  if (ui.screen === "days") $("calList").onscroll = syncCalHeader;
+  if (cal && ui.scrollDays) { ui.scrollDays = false; requestAnimationFrame(jumpToday); }
+  if (cal) $("calList").onscroll = syncCalHeader;
   ui.hit = null;
 }
 
@@ -379,6 +405,7 @@ function renderSheet() {
   if (s === "settings") inner = settingsSheet();
   if (s === "share") inner = shareSheet();
   if (s === "day") inner = daySheet();
+  if (s.startsWith("c:") && COMM()) inner = COMM().sheet(s);
   if (s === "library") { const n = ui.tplSel.length;
     inner = `${sheetHead("Habit library", "Tap to select — they start today and repeat every day.")}<div class="scroll" style="flex:1;margin:14px 0">${librarySheet(ui.tplSel, false)}</div>
       <button class="btn" data-act="tplAdd" ${n ? "" : "disabled"}>${n ? `Add ${n} habit${n === 1 ? "" : "s"}` : "Pick a few"}</button>`; }
@@ -515,7 +542,9 @@ document.addEventListener("click", e => {
       h.archived_at = todayKey(); const l = (db.comps[todayKey()] || []).filter(x => x !== h.id);
       if (l.length) db.comps[todayKey()] = l; else delete db.comps[todayKey()]; save(); render(); toast("Habit removed"); } return; }
   switch (a) {
-    case "go": ui.sheet = null; ui.screen = d.s; ui.scrollDays = d.s === "days"; $("screen").scrollTop = 0; render(); break;
+    case "go": ui.sheet = null; if (COMM()) COMM().closeLayer(); ui.screen = d.s; ui.scrollDays = ui.screen === "today" && ui.todayView === "cal"; $("screen").dataset.s = ""; $("screen").scrollTop = 0; render(); if (d.s === "community" && COMM()) COMM().onEnter(); break;
+    case "todayView": ui.todayView = d.v; ui.scrollDays = d.v === "cal"; render(); break;
+    case "ptab": ui.pTab = d.v; render(); break;
     case "toggle": setDone(d.id, d.k, !doneOn(d.k).includes(d.id)); break;
     case "add": addHabit(); break;
     case "sheet": ui.sheet = d.s; if (d.s === "library") ui.tplSel = []; renderSheet(); break;
@@ -541,6 +570,7 @@ document.addEventListener("click", e => {
     case "obPick": ui.obSel = ui.obSel.includes(d.t) ? ui.obSel.filter(x => x !== d.t) : ui.obSel.concat(d.t); renderOnboard(); break;
     case "obNext": obNext(); break;
     case "obBack": ui.ob = Math.max(0, ui.ob - 1); renderOnboard(); break;
+    default: if (a.startsWith("c:") && COMM()) COMM().act(a, d, el, e);
   }
 });
 $("scrim").addEventListener("click", () => { ui.sheet = null; renderSheet(); });
@@ -556,7 +586,7 @@ document.addEventListener("change", e => {
   if (e.target.id === "photoIn" && e.target.files[0]) setPhoto(e.target.files[0]);
   if (e.target.id === "handleIn") claimHandle(e.target.value);
 });
-document.addEventListener("keydown", e => { if (e.target.id === "draft" && e.key === "Enter") addHabit(); if (e.key === "Escape" && ui.sheet) { ui.sheet = null; renderSheet(); } });
+document.addEventListener("keydown", e => { if (e.target.id === "draft" && e.key === "Enter") addHabit(); if (e.key === "Escape") { if (ui.sheet) { ui.sheet = null; renderSheet(); } else if (COMM() && COMM().hasLayer()) COMM().closeLayer(); } });
 
 function addHabit() {
   const v = ui.draft.trim(); if (!v) return;
@@ -576,11 +606,12 @@ function setPhoto(file) {
   const img = new Image(), url = URL.createObjectURL(file);
   img.onload = () => { const s = 256, c = document.createElement("canvas"); c.width = c.height = s;
     const m = Math.min(img.width, img.height); c.getContext("2d").drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, s, s);
-    db.prefs.photo = c.toDataURL("image/jpeg", .82); save(); render(); URL.revokeObjectURL(url); };
+    db.prefs.photo = c.toDataURL("image/jpeg", .82); save(); render(); URL.revokeObjectURL(url);
+    if (COMM() && COMM().me()) c.toBlob(b => COMM().setAvatar(b), "image/jpeg", .85); };
   img.src = url;
 }
 function exportData() {
-  const blob = new Blob([JSON.stringify({ app: "BTBU", version: 26, exported_at: new Date().toISOString(), habits: db.habits, completions: db.comps, freezes: db.frozen }, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify({ app: "BTBU", version: 27, exported_at: new Date().toISOString(), habits: db.habits, completions: db.comps, freezes: db.frozen }, null, 2)], { type: "application/json" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `btbu-export-${todayKey()}.json`; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Exported");
 }
@@ -619,7 +650,8 @@ migrate(); applyTheme(); render();
 // sync.js calls this after pulling remote changes.
 window.btbuRefresh = () => { load(); applyTheme(); render(); if (!$("onboard").classList.contains("hidden")) renderOnboard(); };
 if (window.BTBU_SYNC) {
-  BTBU_SYNC.onChange(() => { afterAuth(); if (ui.screen === "you") render(); });
+  let wasReady = false;
+  BTBU_SYNC.onChange(() => { afterAuth(); const r = BTBU_SYNC.isReady(); if (r !== wasReady) { wasReady = r; if (COMM()) COMM().onAuth(); } if (ui.screen === "you" || ui.screen === "community") render(); });
   afterAuth();
   BTBU_SYNC.init();
 } else if (!db.prefs.onboarded) renderOnboard();

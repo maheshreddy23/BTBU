@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0c0a12">
-<meta name="description" content="BTBU — Be The Best You. A habit tracker built on Nigrah, the quiet strength of self-control.">
+<meta name="description" content="BTBU — Be The Best You. A habit tracker and community built on Nigrah, the quiet strength of self-control.">
 <title>BTBU — Be The Best You</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=26">
+<link rel="stylesheet" href="styles.css?v=27">
 <script>
   // Apply saved theme before first paint so there's no flash.
   (function(){try{var m=localStorage.getItem("btbu_theme")||"auto";if(m==="auto")m=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";
@@ -28,12 +28,14 @@
   <div id="toast"></div>
   <nav id="nav"></nav>
   <div id="scrim" class="hidden"></div>
+  <div id="layer" class="hidden"></div>
   <div id="sheet"></div>
   <div id="onboard" class="hidden"></div>
   <div id="gate" class="hidden"></div>
 </div>
-<script src="config.js?v=26" onerror="this.remove()"></script>
-<script src="sync.js?v=26"></script>
-<script src="app.js?v=26"></script>
+<script src="config.js?v=27" onerror="this.remove()"></script>
+<script src="sync.js?v=27"></script>
+<script src="community.js?v=27"></script>
+<script src="app.js?v=27"></script>
 </body>
 </html>

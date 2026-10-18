@@ -668,6 +668,9 @@
       };
     },
     isReady(){ return _state === STATES.READY; },
+    // v27: community.js reuses the signed-in client. Habit sync is unaffected.
+    client(){ return _state === STATES.READY ? _client : null; },
+    userId(){ return _userId; },
     isStale(maxAgeMs){
       // True when we should refresh — used by pull-to-refresh.
       if (_state !== STATES.READY) return false;

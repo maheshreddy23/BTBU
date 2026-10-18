@@ -1,59 +1,59 @@
-# BTBU — Be The Best You · v26
+# BTBU — Be The Best You · v27
 
-> **निग्रह · Nigrah** — the quiet strength of self-control. BTBU is a small daily practice of it.
+> **निग्रह · Nigrah**: the quiet strength of self-control. BTBU is a small daily practice of it, now with people to practise alongside.
 
-A habit tracker that runs in your browser and installs as an app. Sign in with Google, and your habits sync end-to-end-encrypted across your devices. No build step: plain HTML, CSS and JS.
+A habit tracker and community that runs in the browser and installs as an app. Sign in with Google. Your habits sync with end-to-end encryption. Posts, challenges and circles run on Supabase with Row Level Security. There's no build step: it's plain HTML, CSS and JS.
 
-> **Current release:** v26 — five-tab redesign (Home · Today · Days · Stats · You), Gen-Z and Millennial themes in light and dark, first-launch setup, streak freezes, shareable streak card, data export, and the server side for daily reminders.
+## What's new in v27
+- **Four tabs:** Home · Today · Community · You.
+  - Today now has a Checklist / Calendar switch (the old Days tab).
+  - You is a profile with Posts, Stats (the old Stats tab) and Challenges.
+- **Community → Feed.** Posts with text, a photo, a video (up to 60 s and 25 MB) or a streak card.
+  - Like, comment, repost, or quote with your own take.
+  - Shows people you follow, plus suggested posts.
+  - Stories last 24 hours.
+- **Community → Challenges.** Anyone can host one, and joining is free and open.
+  - Members check in daily with a photo or video.
+  - Leaderboard shows everyone, or just people you follow.
+  - Each challenge has a wall of today's check-ins, plus share links (`#ch=<id>`).
+- **Circles.** Private groups of up to 12 people, joined by invite code.
+  - Members can chat and see who closed their habits today.
+  - Only circle members can nudge you, once a day each.
+- **Profiles:** public or private (you approve followers), with handle, name, bio, photo, and post / follower / following counts.
+- **Safety**
+  - Report with reasons, block, mute, and "held for review" for anything containing a filtered word.
+  - Community is 18+ for now: under-18s need verified parental consent under India's DPDP Act, which isn't built yet.
 
-## What's new in v26
-- **Five tabs, no repeated info.** Home is the dashboard (streak, momentum, freezes, month so far, the one habit that needs attention). Today is the only place you check things off. Days is the calendar. Stats holds trends and per-habit history. You holds your profile and account.
-- **Two looks, each light or dark.** Gen-Z (loud, colourful, big numbers) and Millennial (v21 Quiet Mode with per-habit colour). Picked on first launch and changeable in Settings. Both sync.
-- **First launch** (after Google sign-in): name + look → first habits (skipped if you already have some) → reminder time.
-- **Per-habit colour and emoji**, matched from the habit's name.
-- **Streak freezes:** 2 a month. If you miss a day, Home offers a one-tap save. Freezes sync.
-- **Share card:** a 1080×1920 image of your streak and last 35 days. Uses the phone's share sheet, or downloads a PNG where sharing isn't supported.
-- **Export my data** is back (JSON), for people who want their own copy.
-- **Reminders:** the server function is included but switched off until deployed (see below).
-- **Retired:** the Lock Past Days dev toggle, the 4-up stat grid, and the week strip. Their information now lives on Home, Today and Days.
-
-## Sync compatibility
-v26 reads and writes the same storage keys as v25, so existing data and existing cloud records carry over untouched. Three new settings sync alongside the v25 ones: `look`, `reminder` and `freezes`. `sync.js` gains those three entries in `SETTING_KEYS`; nothing else in it changed. No database migration is needed for sync.
+## Privacy model
+- Habit names, completions and stats never leave the encrypted path (`sync_records`).
+- The community only sees what you choose to post.
+- It also gets one yes/no per day ("closed every habit today"), visible only to people who share a circle with you.
+- Private profiles: posts and stories are visible to accepted followers only. Blocks hide both people from each other.
 
 ## Files
 | File | What it is |
 |---|---|
-| `index.html` | Page shell (sign-in gate, screens, sheets) |
-| `styles.css` | Both looks × light/dark |
-| `app.js` | App logic |
-| `sync.js` | Supabase auth + AES-GCM end-to-end-encrypted sync (v25, plus 3 setting keys) |
-| `config.js.template` | Copy to `config.js` and fill in your Supabase URL + anon key (gitignored) |
-| `sw.js`, `manifest.json`, `icon-*.png` | Offline support, install-as-app, push notifications |
-| `docs/` | Sync design (ADR-0001), Google OAuth setup, database schemas |
-| `supabase/` | Reminder server function + its table |
+| `index.html` | Page shell |
+| `styles.css` | Both looks × light/dark, plus community styles |
+| `app.js` | Habits, tabs, onboarding, share card |
+| `community.js` | Feed, stories, challenges, circles, profiles, moderation |
+| `sync.js` | Google sign-in + end-to-end-encrypted habit sync (exposes the signed-in client to community.js) |
+| `config.js` | Your Supabase URL + anon key (public by design) |
+| `supabase/migrations/v27_community.sql` | All community tables, RLS, RPCs and the `media` storage bucket |
+| `sw.js`, `manifest.json`, `icon-*.png` | Offline support, install-as-app, push |
+| `docs/` | Sync design, Google OAuth setup, earlier schemas |
+
+Deploy steps are in **DEPLOY.md**.
 
 ## Run it locally
-`npx serve .` (or `python3 -m http.server`) in this folder, then open the printed address. Without a `config.js` the app skips sign-in and runs local-only.
+`npx serve .` in this folder, then open the printed address and add that address to Supabase → Authentication → URL Configuration → Redirect URLs.
 
-## Turning on reminders
-Until you finish these steps, the app saves each person's reminder time but sends nothing.
-
-1. **Create the table:** Supabase → SQL Editor → run `supabase/migrations/v26_push_subscriptions.sql`.
-2. **Generate push keys:** `npx web-push generate-vapid-keys`.
-3. **Deploy the function** with the Supabase CLI:
-   ```
-   supabase login
-   supabase link --project-ref <your-project-ref>
-   supabase secrets set VAPID_PUBLIC_KEY=<public> VAPID_PRIVATE_KEY=<private> VAPID_SUBJECT=mailto:<your-email> CRON_SECRET=<any-long-random-string>
-   supabase functions deploy reminders --no-verify-jwt
-   ```
-4. **Run it every 15 minutes:** Supabase → Integrations → Cron → new job → HTTP POST
-   `https://<project-ref>.supabase.co/functions/v1/reminders?run=1` with header `x-cron-secret: <CRON_SECRET>`.
-5. **Switch it on:** at the top of `app.js`, set
-   `const PUSH_CONFIG = { enabled: true, vapidPublicKey: "<public>", subscribeUrl: "https://<project-ref>.supabase.co/functions/v1/reminders" };`
-6. Bump `CACHE` in `sw.js` so installed copies update.
-
-On iPhone, notifications only work once BTBU is added to the Home Screen (iOS 16.4+).
+## Moderation (for you, the operator)
+- **Reports:** Supabase → Table Editor → `reports`. Set `status` to `actioned` or `dismissed`.
+- **Held content:** filter `posts`, `comments`, `circle_messages`, `checkins`, `stories` or `challenges` on `held = true`.
+  - To approve, set `held` to false.
+  - To remove, delete the row.
+- **Filtered words:** add rows to `banned_words`. The app also checks a short list client-side to warn the person before they post.
 
 ## Roadmap
-Community posts, milestone rewards, hosted habit challenges, Apple / Meta / Snapchat sign-in, wearable integrations, E2EE recovery passphrase.
+Push notifications for nudges and comments, under-18 accounts with verified parental consent, milestone rewards, Apple / Meta / Snapchat sign-in, wearables, E2EE recovery passphrase.
