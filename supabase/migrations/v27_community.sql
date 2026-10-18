@@ -1,3 +1,4 @@
+-- Copyright (c) 2026 Mahesh Reddy. All rights reserved. Proprietary — see LICENSE.
 -- BTBU v27 — Community schema.
 -- Run in Supabase → SQL Editor AFTER docs/supabase-schema.sql and docs/supabase-schema-v25.sql.
 -- Idempotent: safe to run twice.
