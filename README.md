@@ -57,3 +57,6 @@ Deploy steps are in **DEPLOY.md**.
 
 ## Roadmap
 Push notifications for nudges and comments, under-18 accounts with verified parental consent, milestone rewards, Apple / Meta / Snapchat sign-in, wearables, E2EE recovery passphrase.
+
+## Licence
+Proprietary. Copyright © 2026 Mahesh Reddy. All rights reserved. See `LICENSE`. Viewing this code does not grant any right to copy, reuse or redeploy it.

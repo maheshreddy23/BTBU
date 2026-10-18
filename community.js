@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Mahesh Reddy. All rights reserved. Proprietary — see LICENSE.
 // ============================================================================
 // BTBU v27 — Community: feed, stories, challenges, circles, profiles.
 // Talks to Supabase directly; schema in supabase/migrations/v27_community.sql.

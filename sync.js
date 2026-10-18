@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Mahesh Reddy. All rights reserved. Proprietary — see LICENSE.
 // ============================================================================
 // BTBU sync — Supabase-backed, end-to-end-encrypted, opt-in.
 // ============================================================================

@@ -1,0 +1,23 @@
+Copyright (c) 2026 Mahesh Reddy. All rights reserved.
+
+BTBU — Be The Best You ("the Software") — including its source code, design,
+visual assets, copy, name, logo and database schema, is proprietary.
+
+No licence is granted. You may view this repository on GitHub, as GitHub's
+Terms of Service allow, but you may NOT, without prior written permission
+from the copyright holder:
+
+  * copy, modify, merge, publish, distribute, sublicense or sell the Software
+    or any part of it;
+  * use the Software, or any part of it, to build, run or offer a product or
+    service;
+  * use the names "BTBU", "Be The Best You" or the BTBU logo.
+
+Third-party libraries this project loads remain under their own licences.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY ARISING FROM THE SOFTWARE OR ITS USE.
+
+For licensing or permission requests, open an issue at
+https://github.com/maheshreddy23/BTBU or contact the copyright holder.

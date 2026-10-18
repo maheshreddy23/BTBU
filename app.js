@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Mahesh Reddy. All rights reserved. Proprietary — see LICENSE.
 // ============================================================================
 // BTBU v27 — Be The Best You
 // Vanilla JS PWA. Tabs: Home (dashboard) · Today (checklist + calendar) · Community · You (posts, stats, challenges).

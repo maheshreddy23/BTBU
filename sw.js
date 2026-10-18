@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Mahesh Reddy. All rights reserved. Proprietary — see LICENSE.
 // BTBU v27 service worker — app shell cache-first, everything else network.
 const CACHE = "btbu-v27.1";
 const SHELL = ["./", "index.html", "styles.css?v=27.1", "sync.js?v=27.1", "community.js?v=27.1", "app.js?v=27.1", "manifest.json", "icon-180.png", "icon-192.png", "icon-512.png"];
